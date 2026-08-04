@@ -1,5 +1,5 @@
 <template>
   <UApp>
-    <UPageHero title="Jagra" />
+    <NuxtPage />
   </UApp>
 </template>
