@@ -1,8 +1,9 @@
 <script setup lang="ts">
-const rules = [
-  { title: '〜に限らず' },
-  { title: '〜につき〈理由〉' },
-]
+const { data: rules } = await useAsyncData('rules', () => {
+  return queryCollection('rules')
+    .order('title', 'DESC')
+    .all()
+})
 </script>
 
 <template>
