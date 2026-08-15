@@ -12,6 +12,9 @@ const { data: rule } = await useAsyncData(`rule-${props.id}`, () => {
   <UModal>
     <template #content>
       <UCard v-if="rule">
+        <p v-if="rule.meaning?.en" class="mb-1 text-sm font-semibold text-primary">
+          {{ rule.meaning.en }}
+        </p>
         <h1 class="text-3xl sm:text-4xl text-pretty font-bold text-highlighted">
           {{ rule.title }}
         </h1>
