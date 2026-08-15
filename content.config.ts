@@ -11,6 +11,10 @@ export default defineContentConfig({
         meaning: z.object({
           en: z.string(),
         }),
+        examples: z.array(z.object({
+          ja: z.string(),
+          en: z.string().optional(),
+        })).optional(),
       })
     })
   }
