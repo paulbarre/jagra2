@@ -12,6 +12,13 @@ const example = computed(() => {
   if (!examples.length) return undefined
   return examples[Math.floor(Math.random() * examples.length)]
 })
+
+function highlightParts(text: string) {
+  return text.split('**').map((part, i) => ({
+    text: part,
+    highlight: i % 2 === 1,
+  }))
+}
 </script>
 
 <template>
@@ -32,7 +39,10 @@ const example = computed(() => {
         >
           <template #description>
             <p>
-              {{ example.ja }}
+              <template v-for="(part, i) in highlightParts(example.ja)" :key="i">
+                <span v-if="part.highlight" class="text-primary">{{ part.text }}</span>
+                <template v-else>{{ part.text }}</template>
+              </template>
             </p>
             <p v-if="example.en">
               {{ example.en }}
