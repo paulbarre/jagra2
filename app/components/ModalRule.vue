@@ -49,6 +49,13 @@ function highlightParts(text: string) {
             </p>
           </template>
         </UPageFeature>
+        <UPageFeature
+          v-if="rule.notes?.en || rule.notes?.ja"
+          class="mt-4"
+          icon="i-lucide-sticky-note"
+          title="Notes"
+          :description="rule.notes.en ?? rule.notes.ja"
+        />
       </UCard>
     </template>
   </UModal>
