@@ -56,6 +56,21 @@ function highlightParts(text: string) {
           title="Notes"
           :description="rule.notes.en ?? rule.notes.ja"
         />
+        <UPageFeature
+          v-if="rule.structure?.length"
+          class="mt-4"
+          icon="i-lucide-shapes"
+          title="Structure"
+        >
+          <template #description>
+            <p v-for="(pattern, patternIndex) in rule.structure" :key="patternIndex">
+              <template v-for="(part, i) in highlightParts(pattern)" :key="i">
+                <UBadge v-if="part.highlight" variant="subtle">{{ part.text }}</UBadge>
+                <template v-else><span>{{ part.text }}</span></template>
+              </template>
+            </p>
+          </template>
+        </UPageFeature>
       </UCard>
     </template>
   </UModal>

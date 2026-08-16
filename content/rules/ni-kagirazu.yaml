@@ -4,6 +4,8 @@ meaning:
   en: not only… but also
 notes:
   en: Equivalent to 〜だけでなく、ほかにも, but more formal.
+structure:
+  - "**N**に限らず"
 examples:
   - ja: 環境対策のためにも、夏**に限らず**、年間を通して節電を心がけるべきだ。
   - ja: 水の問題は特定の地域**に限らず**、世界的な問題になるだろう。
