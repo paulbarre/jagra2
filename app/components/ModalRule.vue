@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import SwipeCard from './SwipeCard.vue'
+import SwipeCardDeck from './SwipeCardDeck.vue'
 
 const props = defineProps<{
   id: string
@@ -9,19 +9,40 @@ const emit = defineEmits<{
   close: [payload?: { action: 'reviewed' }]
 }>()
 
-const { data: rule } = await useAsyncData(`rule-${props.id}`, () => {
-  return queryCollection('rules').where('id', '=', props.id).first()
+const { data: rules } = await useAsyncData('rules', () => {
+  return queryCollection('rules').all()
 })
 
-function onReviewed() {
-  emit('close', { action: 'reviewed' })
+const rule = computed(() => rules.value?.find(r => r.id === props.id))
+
+function pickExample(examples: { ja: string, en?: string }[] | undefined) {
+  if (!examples?.length) return undefined
+  return examples[Math.floor(Math.random() * examples.length)]
 }
 
-const example = computed(() => {
-  const examples = rule.value?.examples ?? []
-  if (!examples.length) return undefined
-  return examples[Math.floor(Math.random() * examples.length)]
+function shuffle<T>(items: T[]) {
+  const result = [...items]
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[result[i], result[j]] = [result[j]!, result[i]!]
+  }
+  return result
+}
+
+const deckItems = computed(() => {
+  if (!rules.value || !rule.value) return []
+  const value = rule.value
+  const others = shuffle(rules.value.filter(r => r.id !== value.id))
+  return [value, ...others].map(r => ({
+    id: r.id,
+    rule: r,
+    example: pickExample(r.examples),
+  }))
 })
+
+function onEmptied() {
+  emit('close', { action: 'reviewed' })
+}
 
 function highlightParts(text: string) {
   return text.split('**').map((part, i) => ({
@@ -35,60 +56,64 @@ function highlightParts(text: string) {
   <UModal :ui="{ content: 'bg-transparent ring-0 shadow-none rounded-none overflow-visible pointer-events-none!' }">
     <template #content>
       <div class="pointer-events-none p-4 sm:p-6">
-        <SwipeCard
+        <SwipeCardDeck
           v-if="rule"
+          :items="deckItems"
           :left="{ icon: 'i-lucide-check', label: 'Reviewed', color: 'success' }"
-          @left="onReviewed"
+          :right="{ icon: 'i-lucide-rotate-ccw', label: 'Later', color: 'warning' }"
+          @empty="onEmptied"
         >
-          <UCard>
-            <p v-if="rule.meaning?.en" class="mb-1 text-sm font-semibold text-primary">
-              {{ rule.meaning.en }}
-            </p>
-            <h1 class="text-3xl sm:text-4xl text-pretty font-bold text-highlighted">
-              {{ rule.title }}
-            </h1>
-            <UPageFeature
-              v-if="example"
-              class="mt-6"
-              icon="i-lucide-quote"
-              title="Example"
-            >
-              <template #description>
-                <p>
-                  <template v-for="(part, i) in highlightParts(example.ja)" :key="i">
-                    <span v-if="part.highlight" class="text-primary">{{ part.text }}</span>
-                    <template v-else>{{ part.text }}</template>
-                  </template>
-                </p>
-                <p v-if="example.en">
-                  {{ example.en }}
-                </p>
-              </template>
-            </UPageFeature>
-            <UPageFeature
-              v-if="rule.notes?.en || rule.notes?.ja"
-              class="mt-4"
-              icon="i-lucide-sticky-note"
-              title="Notes"
-              :description="rule.notes.en ?? rule.notes.ja"
-            />
-            <UPageFeature
-              v-if="rule.structure?.length"
-              class="mt-4"
-              icon="i-lucide-shapes"
-              title="Structure"
-            >
-              <template #description>
-                <p v-for="(pattern, patternIndex) in rule.structure" :key="patternIndex">
-                  <template v-for="(part, i) in highlightParts(pattern)" :key="i">
-                    <UBadge v-if="part.highlight" variant="subtle">{{ part.text }}</UBadge>
-                    <template v-else><span>{{ part.text }}</span></template>
-                  </template>
-                </p>
-              </template>
-            </UPageFeature>
-          </UCard>
-        </SwipeCard>
+          <template #default="{ item }">
+            <UCard>
+              <p v-if="item.rule.meaning?.en" class="mb-1 text-sm font-semibold text-primary">
+                {{ item.rule.meaning.en }}
+              </p>
+              <h1 class="text-3xl sm:text-4xl text-pretty font-bold text-highlighted">
+                {{ item.rule.title }}
+              </h1>
+              <UPageFeature
+                v-if="item.example"
+                class="mt-6"
+                icon="i-lucide-quote"
+                title="Example"
+              >
+                <template #description>
+                  <p>
+                    <template v-for="(part, i) in highlightParts(item.example.ja)" :key="i">
+                      <span v-if="part.highlight" class="text-primary">{{ part.text }}</span>
+                      <template v-else>{{ part.text }}</template>
+                    </template>
+                  </p>
+                  <p v-if="item.example.en">
+                    {{ item.example.en }}
+                  </p>
+                </template>
+              </UPageFeature>
+              <UPageFeature
+                v-if="item.rule.notes?.en || item.rule.notes?.ja"
+                class="mt-4"
+                icon="i-lucide-sticky-note"
+                title="Notes"
+                :description="item.rule.notes.en ?? item.rule.notes.ja"
+              />
+              <UPageFeature
+                v-if="item.rule.structure?.length"
+                class="mt-4"
+                icon="i-lucide-shapes"
+                title="Structure"
+              >
+                <template #description>
+                  <p v-for="(pattern, patternIndex) in item.rule.structure" :key="patternIndex">
+                    <template v-for="(part, i) in highlightParts(pattern)" :key="i">
+                      <UBadge v-if="part.highlight" variant="subtle">{{ part.text }}</UBadge>
+                      <template v-else><span>{{ part.text }}</span></template>
+                    </template>
+                  </p>
+                </template>
+              </UPageFeature>
+            </UCard>
+          </template>
+        </SwipeCardDeck>
       </div>
     </template>
   </UModal>

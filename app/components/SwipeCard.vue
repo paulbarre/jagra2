@@ -7,14 +7,18 @@ export interface SwipeAction {
   color?: SwipeActionColor
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   left?: SwipeAction
   right?: SwipeAction
-}>()
+  interactive?: boolean
+}>(), {
+  interactive: true,
+})
 
 const emit = defineEmits<{
   left: []
   right: []
+  flying: [direction: 'left' | 'right']
 }>()
 
 const MASK_CLASSES: Record<SwipeActionColor, string> = {
@@ -35,6 +39,7 @@ const REVEAL_PAUSE = 300
 
 const el = ref<HTMLElement>()
 const dragging = ref(false)
+const suppressTransition = ref(false)
 const flying = ref(false)
 const revealing = ref(false)
 const forcedProgress = ref<number | null>(null)
@@ -47,7 +52,7 @@ let startX = 0
 let startY = 0
 
 function onPointerDown(event: PointerEvent) {
-  if (flying.value || revealing.value) return
+  if (!props.interactive || flying.value || revealing.value) return
   dragging.value = true
   pointerId = event.pointerId
   startX = event.clientX - offsetX.value
@@ -79,6 +84,7 @@ function onPointerUp(event: PointerEvent) {
 function flyOut(direction: 'left' | 'right') {
   if (flying.value) return
   flying.value = true
+  emit('flying', direction)
   const distance = (el.value?.offsetWidth ?? window.innerWidth) + 200
   offsetX.value = direction === 'left' ? -distance : distance
   offsetY.value += direction === 'left' ? -15 : 15
@@ -96,9 +102,24 @@ function revealThenSwipe(direction: 'left' | 'right') {
   window.setTimeout(() => flyOut(direction), REVEAL_DURATION + REVEAL_PAUSE)
 }
 
-function onActionClick(direction: 'left' | 'right') {
-  revealThenSwipe(direction)
+function reset() {
+  suppressTransition.value = true
+  flying.value = false
+  revealing.value = false
+  forcedProgress.value = null
+  forcedDirection.value = null
+  offsetX.value = 0
+  offsetY.value = 0
+  nextTick(() => {
+    suppressTransition.value = false
+  })
 }
+
+defineExpose({
+  triggerLeft: () => revealThenSwipe('left'),
+  triggerRight: () => revealThenSwipe('right'),
+  reset,
+})
 
 const rotation = computed(() => {
   const clamped = Math.max(-240, Math.min(240, offsetX.value))
@@ -128,68 +149,38 @@ const maskClass = computed(() => MASK_CLASSES[activeAction.value?.color ?? 'prim
 
 const style = computed(() => ({
   transform: `translate(${offsetX.value}px, ${offsetY.value}px) rotate(${rotation.value}deg)`,
-  transition: dragging.value ? 'none' : `transform ${FLY_OUT_DURATION}ms linear`,
+  transition: dragging.value || suppressTransition.value ? 'none' : `transform ${FLY_OUT_DURATION}ms linear`,
 }))
 
 const overlayTransition = computed(() => {
   return dragging.value ? 'none' : `opacity ${REVEAL_DURATION}ms ease-out, transform ${REVEAL_DURATION}ms ease-out`
 })
-
-const buttonClass = computed(() => ({
-  'pointer-events-none opacity-0': revealing.value || flying.value,
-}))
 </script>
 
 <template>
-  <div class="pointer-events-none flex w-full flex-col items-center gap-6">
+  <div
+    ref="el"
+    class="relative w-full touch-none select-none overflow-hidden rounded-lg"
+    :class="interactive ? 'pointer-events-auto cursor-grab active:cursor-grabbing' : 'pointer-events-none'"
+    :style="style"
+    @pointerdown="onPointerDown"
+    @pointermove="onPointerMove"
+    @pointerup="onPointerUp"
+    @pointercancel="onPointerUp"
+  >
+    <slot />
     <div
-      ref="el"
-      class="pointer-events-auto relative w-full touch-none select-none cursor-grab overflow-hidden rounded-lg active:cursor-grabbing"
-      :style="style"
-      @pointerdown="onPointerDown"
-      @pointermove="onPointerMove"
-      @pointerup="onPointerUp"
-      @pointercancel="onPointerUp"
-    >
-      <slot />
+      class="pointer-events-none absolute inset-0 z-10"
+      :class="maskClass"
+      :style="{ opacity: progress * 0.9, transition: overlayTransition }"
+    />
+    <div class="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
       <div
-        class="pointer-events-none absolute inset-0 z-10"
-        :class="maskClass"
-        :style="{ opacity: progress * 0.9, transition: overlayTransition }"
-      />
-      <div class="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
-        <div
-          class="rotate-[-22deg] rounded-2xl border-8 border-white px-8 py-3 text-4xl font-black tracking-widest text-white uppercase sm:text-5xl"
-          :style="{ opacity: progress, transform: `scale(${0.85 + progress * 0.15})`, transition: overlayTransition }"
-        >
-          {{ activeAction?.label }}
-        </div>
+        class="rotate-[-22deg] rounded-2xl border-8 border-white px-8 py-3 text-4xl font-black tracking-widest text-white uppercase sm:text-5xl"
+        :style="{ opacity: progress, transform: `scale(${0.85 + progress * 0.15})`, transition: overlayTransition }"
+      >
+        {{ activeAction?.label }}
       </div>
-    </div>
-
-    <div v-if="left || right" class="flex items-center justify-center gap-4">
-      <UButton
-        v-if="left"
-        :icon="left.icon"
-        :color="left.color ?? 'primary'"
-        variant="solid"
-        size="xl"
-        class="pointer-events-auto h-16 w-16 items-center justify-center rounded-full shadow-lg transition-opacity duration-300 [&>span]:size-7"
-        :class="buttonClass"
-        :aria-label="left.label"
-        @click="onActionClick('left')"
-      />
-      <UButton
-        v-if="right"
-        :icon="right.icon"
-        :color="right.color ?? 'primary'"
-        variant="solid"
-        size="xl"
-        class="pointer-events-auto h-16 w-16 items-center justify-center rounded-full shadow-lg transition-opacity duration-300 [&>span]:size-7"
-        :class="buttonClass"
-        :aria-label="right.label"
-        @click="onActionClick('right')"
-      />
     </div>
   </div>
 </template>
