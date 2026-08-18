@@ -15,6 +15,12 @@ const { data: rules } = await useAsyncData('rules', () => {
 
 const rule = computed(() => rules.value?.find(r => r.id === props.id))
 
+const { markRevised } = useRuleRevisions()
+
+function onCardLeft(item: { id: string }) {
+  markRevised(item.id)
+}
+
 function pickExample(examples: { ja: string, en?: string }[] | undefined) {
   if (!examples?.length) return undefined
   return examples[Math.floor(Math.random() * examples.length)]
@@ -61,6 +67,7 @@ function highlightParts(text: string) {
           :items="deckItems"
           :left="{ icon: 'i-lucide-check', label: 'Reviewed', color: 'success' }"
           :right="{ icon: 'i-lucide-rotate-ccw', label: 'Later', color: 'warning' }"
+          @left="onCardLeft"
           @empty="onEmptied"
         >
           <template #default="{ item }">
