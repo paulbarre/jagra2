@@ -1,0 +1,15 @@
+id: wo-towazu
+title: 〜を問わず
+meaning:
+  en: regardless of / irrespective of
+notes:
+  en: |
+    Used to say that something applies regardless of a particular condition or distinction.
+    The preceding word often refers to a category or enumeration, e.g. 年齢, 男女, 有無, 国の内外.
+structure:
+  - "**N**を問わず"
+examples:
+  - ja: このスポーツセンターは、年齢を問わず、どなたでも利用できます。
+  - ja: このスーパーは昼夜を問わず、営業しているので、深夜も働く人にとってありがたい。
+  - ja: 経験の有無を問わず、やる気のある社員を募集します。
+  - ja: 私の国では、老若男女を問わず、みんな、サッカーが好きだ。
