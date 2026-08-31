@@ -29,27 +29,31 @@ function revisedLabel(ruleId: string) {
 
 <template>
   <UContainer>
-    <UPageHero title="Jagra" />
-    <UPageGrid>
-      <UPageCard
-        v-for="rule in rules"
-        :key="rule.id"
-        v-bind="rule"
-        variant="subtle"
-        :ui="{ footer: 'pt-1 mt-0' }"
-        @click="open(rule.id)"
-      >
-        <template #footer>
-          <div class="flex items-center gap-1.5 text-sm text-muted">
-            <UIcon
-              :name="getRevisedAt(rule.id) ? 'i-lucide-eye' : 'i-lucide-eye-off'"
-              class="size-4"
-              :class="isRevisedToday(rule.id) ? 'text-primary' : 'text-muted'"
-            />
-            <span>{{ revisedLabel(rule.id) }}</span>
-          </div>
-        </template>
-      </UPageCard>
-    </UPageGrid>
+    <UPage>
+      <UPageHeader title="Jagra" />
+      <UPageBody>
+        <UPageGrid>
+          <UPageCard
+            v-for="rule in rules"
+            :key="rule.id"
+            v-bind="rule"
+            variant="subtle"
+            :ui="{ footer: 'pt-1 mt-0' }"
+            @click="open(rule.id)"
+          >
+            <template #footer>
+              <div class="flex items-center gap-1.5 text-sm text-muted">
+                <UIcon
+                  :name="getRevisedAt(rule.id) ? 'i-lucide-eye' : 'i-lucide-eye-off'"
+                  class="size-4"
+                  :class="isRevisedToday(rule.id) ? 'text-primary' : 'text-muted'"
+                />
+                <span>{{ revisedLabel(rule.id) }}</span>
+              </div>
+            </template>
+          </UPageCard>
+        </UPageGrid>
+      </UPageBody>
+    </UPage>
   </UContainer>
 </template>
