@@ -71,7 +71,7 @@ function highlightParts(text: string) {
           @empty="onEmptied"
         >
           <template #default="{ item }">
-            <UCard>
+            <UCard class="h-full">
               <p v-if="item.rule.meaning?.en" class="mb-1 text-sm font-semibold text-primary">
                 {{ item.rule.meaning.en }}
               </p>

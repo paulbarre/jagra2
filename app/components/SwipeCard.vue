@@ -11,8 +11,10 @@ const props = withDefaults(defineProps<{
   left?: SwipeAction
   right?: SwipeAction
   interactive?: boolean
+  depth?: number
 }>(), {
   interactive: true,
+  depth: 0,
 })
 
 const emit = defineEmits<{
@@ -160,7 +162,7 @@ const overlayTransition = computed(() => {
 <template>
   <div
     ref="el"
-    class="relative w-full touch-none select-none overflow-hidden rounded-lg"
+    class="relative h-full w-full touch-none select-none overflow-hidden rounded-lg"
     :class="interactive ? 'pointer-events-auto cursor-grab active:cursor-grabbing' : 'pointer-events-none'"
     :style="style"
     @pointerdown="onPointerDown"
@@ -169,6 +171,11 @@ const overlayTransition = computed(() => {
     @pointercancel="onPointerUp"
   >
     <slot />
+    <div
+      v-if="depth > 0"
+      class="pointer-events-none absolute inset-0 z-10 bg-neutral-950 dark:bg-black"
+      :style="{ opacity: Math.min(0.45, depth * 0.16), transition: 'opacity 250ms ease-out' }"
+    />
     <div
       class="pointer-events-none absolute inset-0 z-10"
       :class="maskClass"

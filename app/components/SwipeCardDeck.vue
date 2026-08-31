@@ -16,9 +16,8 @@ const emit = defineEmits<{
   empty: []
 }>()
 
-const STACK_OFFSET = 14
+const STACK_OFFSET = 20
 const STACK_SCALE = 0.05
-const STACK_OPACITY_STEP = 0.12
 
 // shallowRef avoids Vue's UnwrapRef transform, which otherwise breaks
 // inference for the generic-constrained T here.
@@ -56,7 +55,6 @@ function stackStyle(index: number) {
     inset: '0',
     zIndex: props.visibleCount - index,
     transform: `translateY(${index * STACK_OFFSET}px) scale(${1 - index * STACK_SCALE})`,
-    opacity: 1 - index * STACK_OPACITY_STEP,
     transition: 'transform 250ms ease-out, opacity 250ms ease-out',
   }
 }
@@ -103,6 +101,7 @@ function onRightClick() {
           :left="left"
           :right="right"
           :interactive="index === 0"
+          :depth="index"
           @left="onCardLeft(item)"
           @right="onCardRight(item)"
           @flying="onFlying"
@@ -112,7 +111,10 @@ function onRightClick() {
       </div>
     </div>
 
-    <div v-if="(left || right) && queue.length" class="flex items-center justify-center gap-4">
+    <div
+      v-if="(left || right) && queue.length"
+      class="mt-2 flex items-center justify-center gap-4"
+    >
       <UButton
         v-if="left"
         :icon="left.icon"
