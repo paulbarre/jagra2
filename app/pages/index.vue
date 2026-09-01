@@ -8,9 +8,16 @@ const { data: rules } = await useAsyncData('rules', () => {
 })
 
 const showDrafts = ref(false)
+const showRevisedToday = ref(true)
+
+const { isRevisedToday, getRevisedAt } = useRuleRevisions()
 
 const filteredRules = computed(() => {
-  return rules.value?.filter(rule => !rule.draft || showDrafts.value)
+  return rules.value?.filter((rule) => {
+    if (rule.draft && !showDrafts.value) return false
+    if (!showRevisedToday.value && isRevisedToday(rule.id)) return false
+    return true
+  })
 })
 
 const overlay = useOverlay()
@@ -22,8 +29,6 @@ async function open(ruleId: string) {
     showDrafts: showDrafts.value,
   })
 }
-
-const { isRevisedToday, getRevisedAt } = useRuleRevisions()
 
 const dateFormatter = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
 
@@ -50,11 +55,27 @@ function revisedLabel(ruleId: string) {
                 @click="showDrafts = !showDrafts"
               />
             </UTooltip>
+            <UTooltip text="Show reviewed today">
+              <UButton
+                icon="i-lucide-eye"
+                :color="showRevisedToday ? 'primary' : 'neutral'"
+                :variant="showRevisedToday ? 'subtle' : 'ghost'"
+                square
+                aria-label="Show reviewed today"
+                @click="showRevisedToday = !showRevisedToday"
+              />
+            </UTooltip>
           </div>
         </template>
       </UPageHeader>
       <UPageBody>
-        <UPageGrid>
+        <UEmpty
+          v-if="filteredRules?.length === 0"
+          icon="i-lucide-search-x"
+          title="No rules to show"
+          description="Every rule is filtered out. Try adjusting the filters above."
+        />
+        <UPageGrid v-else>
           <UPageCard
             v-for="rule in filteredRules"
             :key="rule.id"
