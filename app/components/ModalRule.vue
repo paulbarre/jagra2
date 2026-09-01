@@ -24,6 +24,20 @@ function onCardLeft(item: { id: string }) {
   markRevised(item.id)
 }
 
+const deckRef = ref<{ playTutorial: () => Promise<void> } | null>(null)
+const { hasSeenTutorial, markTutorialSeen } = useSwipeTutorial()
+const tutorialActive = ref(false)
+
+function onModalEnter() {
+  if (hasSeenTutorial()) return
+  markTutorialSeen()
+  deckRef.value?.playTutorial()
+}
+
+function replayTutorial() {
+  deckRef.value?.playTutorial()
+}
+
 function pickExample(examples: { ja: string, en?: string }[] | undefined) {
   if (!examples?.length) return undefined
   return examples[Math.floor(Math.random() * examples.length)]
@@ -62,16 +76,37 @@ function highlightParts(text: string) {
 </script>
 
 <template>
-  <UModal :ui="{ content: 'bg-transparent ring-0 shadow-none rounded-none overflow-visible pointer-events-none!' }">
+  <UModal
+    fullscreen
+    :content="{ onOpenAutoFocus: (e: Event) => e.preventDefault() }"
+    :ui="{
+      overlay: tutorialActive ? 'bg-black/90 transition-colors duration-300' : 'transition-colors duration-300',
+      content: 'items-center justify-center bg-transparent ring-0 shadow-none rounded-none overflow-visible pointer-events-none!',
+    }"
+    @after:enter="onModalEnter"
+  >
     <template #content>
-      <div class="pointer-events-none p-4 sm:p-6">
+      <UButton
+        icon="i-lucide-help-circle"
+        color="neutral"
+        variant="ghost"
+        size="sm"
+        square
+        class="pointer-events-auto fixed top-4 right-4 z-50 sm:top-6 sm:right-6"
+        aria-label="Replay swipe tutorial"
+        @click="replayTutorial"
+      />
+      <div class="pointer-events-none w-full max-w-lg p-4 sm:p-6">
         <SwipeCardDeck
           v-if="rule"
+          ref="deckRef"
           :items="deckItems"
-          :left="{ icon: 'i-lucide-check', label: 'Reviewed', color: 'success' }"
-          :right="{ icon: 'i-lucide-rotate-ccw', label: 'Later', color: 'warning' }"
+          :left="{ icon: 'i-lucide-check', label: 'Reviewed', color: 'success', hint: 'Swipe left to mark a rule as reviewed' }"
+          :right="{ icon: 'i-lucide-rotate-ccw', label: 'Later', color: 'warning', hint: 'Swipe right to come back to it later' }"
           @left="onCardLeft"
           @empty="onEmptied"
+          @tutorial-start="tutorialActive = true"
+          @tutorial-end="tutorialActive = false"
         >
           <template #default="{ item }">
             <UCard class="h-full">

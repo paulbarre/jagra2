@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="T extends { id: string }">
-import SwipeCard, { type SwipeAction } from './SwipeCard.vue'
+import SwipeCard, { type SwipeAction, type SwipeActionColor } from './SwipeCard.vue'
 
 const props = withDefaults(defineProps<{
   items: T[]
@@ -14,6 +14,8 @@ const emit = defineEmits<{
   left: [item: T]
   right: [item: T]
   empty: []
+  tutorialStart: []
+  tutorialEnd: []
 }>()
 
 const STACK_OFFSET = 20
@@ -27,8 +29,6 @@ watch(() => props.items, (items) => {
 })
 
 const visibleQueue = computed(() => queue.value.slice(0, props.visibleCount))
-
-const busy = ref(false)
 
 // Keyed by item id rather than a positional v-for ref array: Vue does not
 // guarantee v-for ref arrays stay in source-array order across reorders.
@@ -59,33 +59,76 @@ function stackStyle(index: number) {
   }
 }
 
-function onFlying() {
-  busy.value = true
-}
-
 function onCardLeft(item: T) {
   queue.value = queue.value.filter(entry => entry.id !== item.id)
-  busy.value = false
   emit('left', item)
   if (queue.value.length === 0) emit('empty')
 }
 
 function onCardRight(item: T) {
   queue.value = [...queue.value.filter(entry => entry.id !== item.id), item]
-  busy.value = false
   cardRefMap.get(item.id)?.reset()
   emit('right', item)
 }
 
-function onLeftClick() {
-  busy.value = true
-  getTopCard()?.triggerLeft()
+const TUTORIAL_HOLD = 2200
+const TUTORIAL_PAUSE = 400
+
+function delay(ms: number) {
+  return new Promise<void>(resolve => window.setTimeout(resolve, ms))
 }
 
-function onRightClick() {
-  busy.value = true
-  getTopCard()?.triggerRight()
+const BG_CLASSES: Record<SwipeActionColor, string> = {
+  primary: 'bg-primary',
+  secondary: 'bg-secondary',
+  success: 'bg-success',
+  info: 'bg-info',
+  warning: 'bg-warning',
+  error: 'bg-error',
+  neutral: 'bg-neutral',
 }
+
+const tutorialStep = ref<'left' | 'right' | null>(null)
+const tutorialPlaying = ref(false)
+
+const tutorialAction = computed(() => {
+  if (tutorialStep.value === 'left') return props.left
+  if (tutorialStep.value === 'right') return props.right
+  return undefined
+})
+const tutorialBgClass = computed(() => BG_CLASSES[tutorialAction.value?.color ?? 'primary'])
+
+async function demoDirection(card: InstanceType<typeof SwipeCard>, direction: 'left' | 'right') {
+  await card.swipeOut(direction)
+  tutorialStep.value = direction
+  await delay(TUTORIAL_HOLD)
+  tutorialStep.value = null
+  await card.swipeBack()
+}
+
+async function playTutorial() {
+  if (tutorialPlaying.value) return
+  const card = getTopCard()
+  if (!card) return
+  tutorialPlaying.value = true
+  emit('tutorialStart')
+  try {
+    if (props.left) {
+      await demoDirection(card, 'left')
+      await delay(TUTORIAL_PAUSE)
+    }
+    if (props.right) {
+      await demoDirection(card, 'right')
+    }
+  } finally {
+    tutorialPlaying.value = false
+    emit('tutorialEnd')
+  }
+}
+
+defineExpose({
+  playTutorial,
+})
 </script>
 
 <template>
@@ -104,39 +147,26 @@ function onRightClick() {
           :depth="index"
           @left="onCardLeft(item)"
           @right="onCardRight(item)"
-          @flying="onFlying"
         >
           <slot :item="item" />
         </SwipeCard>
       </div>
-    </div>
 
-    <div
-      v-if="(left || right) && queue.length"
-      class="mt-2 flex items-center justify-center gap-4"
-    >
-      <UButton
-        v-if="left"
-        :icon="left.icon"
-        :color="left.color ?? 'primary'"
-        variant="solid"
-        size="xl"
-        class="pointer-events-auto h-16 w-16 items-center justify-center rounded-full shadow-lg transition-opacity duration-300 [&>span]:size-7"
-        :class="{ 'pointer-events-none opacity-0': busy }"
-        :aria-label="left.label"
-        @click="onLeftClick"
-      />
-      <UButton
-        v-if="right"
-        :icon="right.icon"
-        :color="right.color ?? 'primary'"
-        variant="solid"
-        size="xl"
-        class="pointer-events-auto h-16 w-16 items-center justify-center rounded-full shadow-lg transition-opacity duration-300 [&>span]:size-7"
-        :class="{ 'pointer-events-none opacity-0': busy }"
-        :aria-label="right.label"
-        @click="onRightClick"
-      />
+      <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="opacity-0 translate-y-1 scale-95"
+        leave-active-class="transition duration-200 ease-in"
+        leave-to-class="opacity-0 translate-y-1 scale-95"
+      >
+        <div
+          v-if="tutorialAction?.hint"
+          class="pointer-events-none absolute left-1/2 top-full z-30 mt-5 flex w-max max-w-[min(85vw,22rem)] -translate-x-1/2 items-center gap-2 rounded-full px-5 py-3 text-center text-base font-semibold text-white shadow-[0_12px_30px_-6px_rgba(0,0,0,0.6)]"
+          :class="tutorialBgClass"
+        >
+          <UIcon :name="tutorialAction.icon" class="size-5 shrink-0" />
+          <span>{{ tutorialAction.hint }}</span>
+        </div>
+      </Transition>
     </div>
   </div>
 </template>

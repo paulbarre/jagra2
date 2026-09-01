@@ -5,6 +5,7 @@ export interface SwipeAction {
   icon: string
   label: string
   color?: SwipeActionColor
+  hint?: string
 }
 
 const props = withDefaults(defineProps<{
@@ -36,16 +37,13 @@ const MASK_CLASSES: Record<SwipeActionColor, string> = {
 const THRESHOLD = 120
 const OPACITY_RANGE = 320
 const FLY_OUT_DURATION = 250
-const REVEAL_DURATION = 400
-const REVEAL_PAUSE = 300
+const DEMO_DISTANCE = 260
 
 const el = ref<HTMLElement>()
 const dragging = ref(false)
 const suppressTransition = ref(false)
 const flying = ref(false)
 const revealing = ref(false)
-const forcedProgress = ref<number | null>(null)
-const forcedDirection = ref<'left' | 'right' | null>(null)
 const offsetX = ref(0)
 const offsetY = ref(0)
 
@@ -96,20 +94,35 @@ function flyOut(direction: 'left' | 'right') {
   }, FLY_OUT_DURATION)
 }
 
-function revealThenSwipe(direction: 'left' | 'right') {
-  if (flying.value || revealing.value) return
-  revealing.value = true
-  forcedDirection.value = direction
-  forcedProgress.value = 1
-  window.setTimeout(() => flyOut(direction), REVEAL_DURATION + REVEAL_PAUSE)
+// Used by the tutorial to demo a swipe without actually dismissing the
+// card: slides it partway out and resolves once settled, so the caller can
+// hold there to show an explanation before calling swipeBack().
+function swipeOut(direction: 'left' | 'right') {
+  return new Promise<void>((resolve) => {
+    if (flying.value || revealing.value || dragging.value) {
+      resolve()
+      return
+    }
+    revealing.value = true
+    offsetX.value = direction === 'left' ? -DEMO_DISTANCE : DEMO_DISTANCE
+    window.setTimeout(resolve, FLY_OUT_DURATION)
+  })
+}
+
+function swipeBack() {
+  return new Promise<void>((resolve) => {
+    offsetX.value = 0
+    window.setTimeout(() => {
+      revealing.value = false
+      resolve()
+    }, FLY_OUT_DURATION)
+  })
 }
 
 function reset() {
   suppressTransition.value = true
   flying.value = false
   revealing.value = false
-  forcedProgress.value = null
-  forcedDirection.value = null
   offsetX.value = 0
   offsetY.value = 0
   nextTick(() => {
@@ -118,8 +131,8 @@ function reset() {
 }
 
 defineExpose({
-  triggerLeft: () => revealThenSwipe('left'),
-  triggerRight: () => revealThenSwipe('right'),
+  swipeOut,
+  swipeBack,
   reset,
 })
 
@@ -129,7 +142,6 @@ const rotation = computed(() => {
 })
 
 const activeDirection = computed<'left' | 'right' | null>(() => {
-  if (forcedDirection.value) return forcedDirection.value
   if (offsetX.value < 0) return 'left'
   if (offsetX.value > 0) return 'right'
   return null
@@ -143,7 +155,6 @@ const activeAction = computed(() => {
 
 const progress = computed(() => {
   if (!activeAction.value) return 0
-  if (forcedProgress.value !== null) return forcedProgress.value
   return Math.min(1, Math.max(0, Math.abs(offsetX.value) / OPACITY_RANGE))
 })
 
@@ -155,7 +166,7 @@ const style = computed(() => ({
 }))
 
 const overlayTransition = computed(() => {
-  return dragging.value ? 'none' : `opacity ${REVEAL_DURATION}ms ease-out, transform ${REVEAL_DURATION}ms ease-out`
+  return dragging.value ? 'none' : `opacity ${FLY_OUT_DURATION}ms ease-out, transform ${FLY_OUT_DURATION}ms ease-out`
 })
 </script>
 
