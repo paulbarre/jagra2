@@ -1,5 +1,5 @@
 <script setup lang="ts">
-export type SwipeActionColor = 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'
+export type SwipeActionColor = 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral' | 'sky'
 
 export interface SwipeAction {
   icon: string
@@ -11,6 +11,7 @@ export interface SwipeAction {
 const props = withDefaults(defineProps<{
   left?: SwipeAction
   right?: SwipeAction
+  up?: SwipeAction
   interactive?: boolean
   depth?: number
 }>(), {
@@ -21,7 +22,8 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
   left: []
   right: []
-  flying: [direction: 'left' | 'right']
+  up: []
+  flying: [direction: 'left' | 'right' | 'up']
 }>()
 
 const MASK_CLASSES: Record<SwipeActionColor, string> = {
@@ -32,6 +34,7 @@ const MASK_CLASSES: Record<SwipeActionColor, string> = {
   warning: 'bg-warning',
   error: 'bg-error',
   neutral: 'bg-neutral',
+  sky: 'bg-sky-500',
 }
 
 const THRESHOLD = 120
@@ -71,7 +74,9 @@ function onPointerUp(event: PointerEvent) {
   dragging.value = false
   pointerId = null
 
-  if (props.left && offsetX.value <= -THRESHOLD) {
+  if (props.up && offsetY.value <= -THRESHOLD && -offsetY.value > Math.abs(offsetX.value)) {
+    flyOut('up')
+  } else if (props.left && offsetX.value <= -THRESHOLD) {
     flyOut('left')
   } else if (props.right && offsetX.value >= THRESHOLD) {
     flyOut('right')
@@ -81,30 +86,40 @@ function onPointerUp(event: PointerEvent) {
   }
 }
 
-function flyOut(direction: 'left' | 'right') {
+function flyOut(direction: 'left' | 'right' | 'up') {
   if (flying.value) return
   flying.value = true
   emit('flying', direction)
-  const distance = (el.value?.offsetWidth ?? window.innerWidth) + 200
-  offsetX.value = direction === 'left' ? -distance : distance
-  offsetY.value += direction === 'left' ? -15 : 15
+  if (direction === 'up') {
+    const distance = (el.value?.offsetHeight ?? window.innerHeight) + 200
+    offsetY.value = -distance
+  } else {
+    const distance = (el.value?.offsetWidth ?? window.innerWidth) + 200
+    offsetX.value = direction === 'left' ? -distance : distance
+    offsetY.value += direction === 'left' ? -15 : 15
+  }
   window.setTimeout(() => {
     if (direction === 'left') emit('left')
-    else emit('right')
+    else if (direction === 'right') emit('right')
+    else emit('up')
   }, FLY_OUT_DURATION)
 }
 
 // Used by the tutorial to demo a swipe without actually dismissing the
 // card: slides it partway out and resolves once settled, so the caller can
 // hold there to show an explanation before calling swipeBack().
-function swipeOut(direction: 'left' | 'right') {
+function swipeOut(direction: 'left' | 'right' | 'up') {
   return new Promise<void>((resolve) => {
     if (flying.value || revealing.value || dragging.value) {
       resolve()
       return
     }
     revealing.value = true
-    offsetX.value = direction === 'left' ? -DEMO_DISTANCE : DEMO_DISTANCE
+    if (direction === 'up') {
+      offsetY.value = -DEMO_DISTANCE
+    } else {
+      offsetX.value = direction === 'left' ? -DEMO_DISTANCE : DEMO_DISTANCE
+    }
     window.setTimeout(resolve, FLY_OUT_DURATION)
   })
 }
@@ -112,6 +127,7 @@ function swipeOut(direction: 'left' | 'right') {
 function swipeBack() {
   return new Promise<void>((resolve) => {
     offsetX.value = 0
+    offsetY.value = 0
     window.setTimeout(() => {
       revealing.value = false
       resolve()
@@ -141,7 +157,8 @@ const rotation = computed(() => {
   return clamped / 14
 })
 
-const activeDirection = computed<'left' | 'right' | null>(() => {
+const activeDirection = computed<'left' | 'right' | 'up' | null>(() => {
+  if (props.up && offsetY.value < 0 && -offsetY.value > Math.abs(offsetX.value)) return 'up'
   if (offsetX.value < 0) return 'left'
   if (offsetX.value > 0) return 'right'
   return null
@@ -150,12 +167,14 @@ const activeDirection = computed<'left' | 'right' | null>(() => {
 const activeAction = computed(() => {
   if (activeDirection.value === 'left') return props.left
   if (activeDirection.value === 'right') return props.right
+  if (activeDirection.value === 'up') return props.up
   return undefined
 })
 
 const progress = computed(() => {
   if (!activeAction.value) return 0
-  return Math.min(1, Math.max(0, Math.abs(offsetX.value) / OPACITY_RANGE))
+  const magnitude = activeDirection.value === 'up' ? -offsetY.value : Math.abs(offsetX.value)
+  return Math.min(1, Math.max(0, magnitude / OPACITY_RANGE))
 })
 
 const maskClass = computed(() => MASK_CLASSES[activeAction.value?.color ?? 'primary'])

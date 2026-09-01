@@ -5,7 +5,15 @@ export interface RuleRevisionRecord {
   revisedAt: string
 }
 
-type JagraDB = Dexie & { ruleRevisions: EntityTable<RuleRevisionRecord, 'ruleId'> }
+export interface RuleFrozenRecord {
+  ruleId: string
+  frozenAt: string
+}
+
+type JagraDB = Dexie & {
+  ruleRevisions: EntityTable<RuleRevisionRecord, 'ruleId'>
+  ruleFrozen: EntityTable<RuleFrozenRecord, 'ruleId'>
+}
 
 let _db: JagraDB | undefined
 
@@ -14,6 +22,7 @@ export function getDb(): JagraDB {
   if (!_db) {
     const db = new Dexie('jagra') as JagraDB
     db.version(1).stores({ ruleRevisions: 'ruleId' })
+    db.version(2).stores({ ruleRevisions: 'ruleId', ruleFrozen: 'ruleId' })
     _db = db
   }
   return _db

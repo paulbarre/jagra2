@@ -4,8 +4,10 @@ import SwipeCardDeck from './SwipeCardDeck.vue'
 const props = withDefaults(defineProps<{
   id: string
   showDrafts?: boolean
+  showFrozen?: boolean
 }>(), {
   showDrafts: false,
+  showFrozen: false,
 })
 
 const emit = defineEmits<{
@@ -19,9 +21,14 @@ const { data: rules } = await useAsyncData('rules', () => {
 const rule = computed(() => rules.value?.find(r => r.id === props.id))
 
 const { markRevised } = useRuleRevisions()
+const { isFrozen, markFrozen } = useRuleFrozen()
 
 function onCardLeft(item: { id: string }) {
   markRevised(item.id)
+}
+
+function onCardUp(item: { id: string }) {
+  markFrozen(item.id)
 }
 
 const deckRef = ref<{ playTutorial: () => Promise<void> } | null>(null)
@@ -52,16 +59,26 @@ function shuffle<T>(items: T[]) {
   return result
 }
 
-const deckItems = computed(() => {
+// A one-time snapshot, not a computed: the deck's contents must stay fixed for the
+// review session. Recomputing on every markFrozen()/markRevised() reactive update
+// would reset SwipeCardDeck's internal queue (see its `watch(() => props.items, ...)`),
+// undoing swipes already made in this session.
+const deckItems = (() => {
   if (!rules.value || !rule.value) return []
   const value = rule.value
-  const others = shuffle(rules.value.filter(r => r.id !== value.id && (!r.draft || props.showDrafts)))
+  const others = shuffle(rules.value.filter((r) => {
+    if (r.id === value.id) return false
+    const draft = r.draft
+    const frozen = isFrozen(r.id)
+    if (!draft && !frozen) return true
+    return (draft && props.showDrafts) || (frozen && props.showFrozen)
+  }))
   return [value, ...others].map(r => ({
     id: r.id,
     rule: r,
     example: pickExample(r.examples),
   }))
-})
+})()
 
 function onEmptied() {
   emit('close', { action: 'reviewed' })
@@ -103,7 +120,9 @@ function highlightParts(text: string) {
           :items="deckItems"
           :left="{ icon: 'i-lucide-check', label: 'Reviewed', color: 'success', hint: 'Swipe left to mark a rule as reviewed' }"
           :right="{ icon: 'i-lucide-rotate-ccw', label: 'Later', color: 'warning', hint: 'Swipe right to come back to it later' }"
+          :up="{ icon: 'i-lucide-snowflake', label: 'Frozen', color: 'sky', hint: 'Swipe up to freeze a rule' }"
           @left="onCardLeft"
+          @up="onCardUp"
           @empty="onEmptied"
           @tutorial-start="tutorialActive = true"
           @tutorial-end="tutorialActive = false"

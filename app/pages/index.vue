@@ -9,14 +9,18 @@ const { data: rules } = await useAsyncData('rules', () => {
 
 const showDrafts = ref(false)
 const showRevisedToday = ref(true)
+const showFrozen = ref(false)
 
 const { isRevisedToday, getRevisedAt } = useRuleRevisions()
+const { isFrozen } = useRuleFrozen()
 
 const filteredRules = computed(() => {
   return rules.value?.filter((rule) => {
-    if (rule.draft && !showDrafts.value) return false
-    if (!showRevisedToday.value && isRevisedToday(rule.id)) return false
-    return true
+    const draft = rule.draft
+    const revisedToday = isRevisedToday(rule.id)
+    const frozen = isFrozen(rule.id)
+    if (!draft && !revisedToday && !frozen) return true
+    return (draft && showDrafts.value) || (revisedToday && showRevisedToday.value) || (frozen && showFrozen.value)
   })
 })
 
@@ -27,6 +31,7 @@ async function open(ruleId: string) {
   modal.open({
     id: ruleId,
     showDrafts: showDrafts.value,
+    showFrozen: showFrozen.value,
   })
 }
 
@@ -65,6 +70,16 @@ function revisedLabel(ruleId: string) {
                 @click="showRevisedToday = !showRevisedToday"
               />
             </UTooltip>
+            <UTooltip text="Show frozen">
+              <UButton
+                icon="i-lucide-snowflake"
+                :color="showFrozen ? 'primary' : 'neutral'"
+                :variant="showFrozen ? 'subtle' : 'ghost'"
+                square
+                aria-label="Show frozen"
+                @click="showFrozen = !showFrozen"
+              />
+            </UTooltip>
           </div>
         </template>
       </UPageHeader>
@@ -81,9 +96,14 @@ function revisedLabel(ruleId: string) {
             :key="rule.id"
             v-bind="rule"
             variant="subtle"
-            :ui="{ footer: 'pt-1 mt-0' }"
+            :ui="{ root: 'overflow-hidden', container: 'z-10', footer: 'pt-1 mt-0' }"
             @click="open(rule.id)"
           >
+            <UIcon
+              v-if="isFrozen(rule.id)"
+              name="i-lucide-snowflake"
+              class="pointer-events-none absolute -right-5 -bottom-5 z-0 size-28 text-sky-500/30"
+            />
             <template #footer>
               <div class="flex items-center gap-1.5 text-sm text-muted">
                 <UIcon

@@ -5,6 +5,7 @@ const props = withDefaults(defineProps<{
   items: T[]
   left?: SwipeAction
   right?: SwipeAction
+  up?: SwipeAction
   visibleCount?: number
 }>(), {
   visibleCount: 3,
@@ -13,6 +14,7 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
   left: [item: T]
   right: [item: T]
+  up: [item: T]
   empty: []
   tutorialStart: []
   tutorialEnd: []
@@ -71,6 +73,12 @@ function onCardRight(item: T) {
   emit('right', item)
 }
 
+function onCardUp(item: T) {
+  queue.value = queue.value.filter(entry => entry.id !== item.id)
+  emit('up', item)
+  if (queue.value.length === 0) emit('empty')
+}
+
 const TUTORIAL_HOLD = 2200
 const TUTORIAL_PAUSE = 400
 
@@ -86,19 +94,21 @@ const BG_CLASSES: Record<SwipeActionColor, string> = {
   warning: 'bg-warning',
   error: 'bg-error',
   neutral: 'bg-neutral',
+  sky: 'bg-sky-500',
 }
 
-const tutorialStep = ref<'left' | 'right' | null>(null)
+const tutorialStep = ref<'left' | 'right' | 'up' | null>(null)
 const tutorialPlaying = ref(false)
 
 const tutorialAction = computed(() => {
   if (tutorialStep.value === 'left') return props.left
   if (tutorialStep.value === 'right') return props.right
+  if (tutorialStep.value === 'up') return props.up
   return undefined
 })
 const tutorialBgClass = computed(() => BG_CLASSES[tutorialAction.value?.color ?? 'primary'])
 
-async function demoDirection(card: InstanceType<typeof SwipeCard>, direction: 'left' | 'right') {
+async function demoDirection(card: InstanceType<typeof SwipeCard>, direction: 'left' | 'right' | 'up') {
   await card.swipeOut(direction)
   tutorialStep.value = direction
   await delay(TUTORIAL_HOLD)
@@ -119,6 +129,10 @@ async function playTutorial() {
     }
     if (props.right) {
       await demoDirection(card, 'right')
+      if (props.up) await delay(TUTORIAL_PAUSE)
+    }
+    if (props.up) {
+      await demoDirection(card, 'up')
     }
   } finally {
     tutorialPlaying.value = false
@@ -143,10 +157,12 @@ defineExpose({
           :ref="(el: unknown) => setCardRef(item.id, el)"
           :left="left"
           :right="right"
+          :up="up"
           :interactive="index === 0"
           :depth="index"
           @left="onCardLeft(item)"
           @right="onCardRight(item)"
+          @up="onCardUp(item)"
         >
           <slot :item="item" />
         </SwipeCard>
