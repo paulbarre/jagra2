@@ -47,7 +47,7 @@ function revisedLabel(ruleId: string) {
 <template>
   <UContainer>
     <UPage>
-      <UPageHeader title="Jagra">
+      <UPageHeader title="Jagra" :ui="{ wrapper: 'flex flex-row items-center justify-between gap-4' }">
         <template #links>
           <div class="flex items-center gap-1 rounded-full border border-default bg-elevated/50 p-1">
             <UTooltip text="Show drafts">
