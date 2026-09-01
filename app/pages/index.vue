@@ -49,13 +49,15 @@ function revisedLabel(ruleId: string) {
     <UPage>
       <UPageHeader title="Jagra">
         <template #links>
-          <div class="flex items-center gap-1 rounded-lg border border-default bg-elevated/50 p-1">
+          <div class="flex items-center gap-1 rounded-full border border-default bg-elevated/50 p-1">
             <UTooltip text="Show drafts">
               <UButton
                 icon="i-lucide-flask-conical"
-                :color="showDrafts ? 'primary' : 'neutral'"
+                color="neutral"
                 :variant="showDrafts ? 'subtle' : 'ghost'"
+                size="xs"
                 square
+                class="rounded-full"
                 aria-label="Show drafts"
                 @click="showDrafts = !showDrafts"
               />
@@ -65,7 +67,9 @@ function revisedLabel(ruleId: string) {
                 icon="i-lucide-eye"
                 :color="showRevisedToday ? 'primary' : 'neutral'"
                 :variant="showRevisedToday ? 'subtle' : 'ghost'"
+                size="xs"
                 square
+                class="rounded-full"
                 aria-label="Show reviewed today"
                 @click="showRevisedToday = !showRevisedToday"
               />
@@ -73,9 +77,11 @@ function revisedLabel(ruleId: string) {
             <UTooltip text="Show frozen">
               <UButton
                 icon="i-lucide-snowflake"
-                :color="showFrozen ? 'primary' : 'neutral'"
+                :color="showFrozen ? 'info' : 'neutral'"
                 :variant="showFrozen ? 'subtle' : 'ghost'"
+                size="xs"
                 square
+                class="rounded-full"
                 aria-label="Show frozen"
                 @click="showFrozen = !showFrozen"
               />
