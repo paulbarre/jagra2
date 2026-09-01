@@ -3,6 +3,7 @@ import ModalRule from '~/components/ModalRule.vue'
 
 const { data: rules } = await useAsyncData('rules', () => {
   return queryCollection('rules')
+    .where('draft', '=', false)
     .order('title', 'DESC')
     .all()
 })

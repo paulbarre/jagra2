@@ -8,6 +8,7 @@ export default defineContentConfig({
       source: 'rules/**.yaml',
       schema: z.object({
         title: z.string(),
+        draft: z.boolean().default(false),
         meaning: z.object({
           en: z.string(),
         }),
