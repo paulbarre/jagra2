@@ -96,9 +96,15 @@ function revisedLabel(ruleId: string) {
             :key="rule.id"
             v-bind="rule"
             variant="subtle"
+            :class="rule.draft ? 'grayscale bg-neutral-500/15' : ''"
             :ui="{ root: 'overflow-hidden', container: 'z-10', footer: 'pt-1 mt-0' }"
             @click="open(rule.id)"
           >
+            <UIcon
+              v-if="rule.draft"
+              name="i-lucide-flask-conical"
+              class="pointer-events-none absolute -right-5 -bottom-5 z-0 size-28 text-neutral-500/30"
+            />
             <UIcon
               v-if="isFrozen(rule.id)"
               name="i-lucide-snowflake"
