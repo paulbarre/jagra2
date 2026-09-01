@@ -3,9 +3,14 @@ import ModalRule from '~/components/ModalRule.vue'
 
 const { data: rules } = await useAsyncData('rules', () => {
   return queryCollection('rules')
-    .where('draft', '=', false)
     .order('title', 'DESC')
     .all()
+})
+
+const showDrafts = ref(false)
+
+const filteredRules = computed(() => {
+  return rules.value?.filter(rule => !rule.draft || showDrafts.value)
 })
 
 const overlay = useOverlay()
@@ -13,7 +18,8 @@ const modal = overlay.create(ModalRule)
 
 async function open(ruleId: string) {
   modal.open({
-    id: ruleId
+    id: ruleId,
+    showDrafts: showDrafts.value,
   })
 }
 
@@ -31,11 +37,26 @@ function revisedLabel(ruleId: string) {
 <template>
   <UContainer>
     <UPage>
-      <UPageHeader title="Jagra" />
+      <UPageHeader title="Jagra">
+        <template #links>
+          <div class="flex items-center gap-1 rounded-lg border border-default bg-elevated/50 p-1">
+            <UTooltip text="Show drafts">
+              <UButton
+                icon="i-lucide-flask-conical"
+                :color="showDrafts ? 'primary' : 'neutral'"
+                :variant="showDrafts ? 'subtle' : 'ghost'"
+                square
+                aria-label="Show drafts"
+                @click="showDrafts = !showDrafts"
+              />
+            </UTooltip>
+          </div>
+        </template>
+      </UPageHeader>
       <UPageBody>
         <UPageGrid>
           <UPageCard
-            v-for="rule in rules"
+            v-for="rule in filteredRules"
             :key="rule.id"
             v-bind="rule"
             variant="subtle"

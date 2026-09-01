@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import SwipeCardDeck from './SwipeCardDeck.vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   id: string
-}>()
+  showDrafts?: boolean
+}>(), {
+  showDrafts: false,
+})
 
 const emit = defineEmits<{
   close: [payload?: { action: 'reviewed' }]
@@ -38,7 +41,7 @@ function shuffle<T>(items: T[]) {
 const deckItems = computed(() => {
   if (!rules.value || !rule.value) return []
   const value = rule.value
-  const others = shuffle(rules.value.filter(r => r.id !== value.id))
+  const others = shuffle(rules.value.filter(r => r.id !== value.id && (!r.draft || props.showDrafts)))
   return [value, ...others].map(r => ({
     id: r.id,
     rule: r,
