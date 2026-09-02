@@ -146,10 +146,21 @@ function reset() {
   })
 }
 
+// Triggered by a keyboard shortcut: same effect as dragging past the
+// threshold, but without the drag.
+function triggerSwipe(direction: 'left' | 'right' | 'up') {
+  if (!props.interactive || dragging.value || revealing.value) return
+  if (direction === 'up' && !props.up) return
+  if (direction === 'left' && !props.left) return
+  if (direction === 'right' && !props.right) return
+  flyOut(direction)
+}
+
 defineExpose({
   swipeOut,
   swipeBack,
   reset,
+  triggerSwipe,
 })
 
 const rotation = computed(() => {

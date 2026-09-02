@@ -140,6 +140,28 @@ async function playTutorial() {
   }
 }
 
+const KEY_DIRECTIONS: Record<string, 'left' | 'right' | 'up'> = {
+  ArrowLeft: 'left',
+  ArrowRight: 'right',
+  ArrowUp: 'up',
+}
+const KEY_SYMBOLS: Record<'left' | 'right' | 'up', string> = {
+  left: '←',
+  right: '→',
+  up: '↑',
+}
+
+function onKeydown(event: KeyboardEvent) {
+  if (event.repeat || tutorialPlaying.value) return
+  const direction = KEY_DIRECTIONS[event.key]
+  if (!direction || !props[direction]) return
+  event.preventDefault()
+  getTopCard()?.triggerSwipe(direction)
+}
+
+onMounted(() => window.addEventListener('keydown', onKeydown))
+onUnmounted(() => window.removeEventListener('keydown', onKeydown))
+
 defineExpose({
   playTutorial,
 })
@@ -181,6 +203,7 @@ defineExpose({
         >
           <UIcon :name="tutorialAction.icon" class="size-5 shrink-0" />
           <span>{{ tutorialAction.hint }}</span>
+          <kbd class="rounded-md border border-white/40 bg-white/10 px-2 py-0.5 font-mono text-sm">{{ tutorialStep && KEY_SYMBOLS[tutorialStep] }}</kbd>
         </div>
       </Transition>
     </div>
