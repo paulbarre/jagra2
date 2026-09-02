@@ -142,7 +142,7 @@ function highlightParts(text: string) {
                 title="Example"
               >
                 <template #description>
-                  <p>
+                  <p class="whitespace-pre-line">
                     <template v-for="(part, i) in highlightParts(item.example.ja)" :key="i">
                       <span v-if="part.highlight" class="text-primary">{{ part.text }}</span>
                       <template v-else>{{ part.text }}</template>
