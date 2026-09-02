@@ -10,9 +10,16 @@ export interface RuleFrozenRecord {
   frozenAt: string
 }
 
+export interface StreakRecord {
+  id: string
+  count: number
+  lastCompletedDayKey: string
+}
+
 type JagraDB = Dexie & {
   ruleRevisions: EntityTable<RuleRevisionRecord, 'ruleId'>
   ruleFrozen: EntityTable<RuleFrozenRecord, 'ruleId'>
+  streak: EntityTable<StreakRecord, 'id'>
 }
 
 let _db: JagraDB | undefined
@@ -23,6 +30,7 @@ export function getDb(): JagraDB {
     const db = new Dexie('jagra') as JagraDB
     db.version(1).stores({ ruleRevisions: 'ruleId' })
     db.version(2).stores({ ruleRevisions: 'ruleId', ruleFrozen: 'ruleId' })
+    db.version(3).stores({ ruleRevisions: 'ruleId', ruleFrozen: 'ruleId', streak: 'id' })
     _db = db
   }
   return _db

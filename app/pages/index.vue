@@ -13,7 +13,23 @@ const showFrozen = ref(false)
 
 const { loaded: revisionsLoaded, isRevisedToday, getRevisedAt } = useRuleRevisions()
 const { loaded: frozenLoaded, isFrozen } = useRuleFrozen()
+const { loaded: streakLoaded, streak, recordCompletion } = useStreak()
 const ready = computed(() => revisionsLoaded.value && frozenLoaded.value)
+
+// Objective completion state, independent of the show* filter toggles: every
+// reviewable (non-draft) rule has been revised today or is frozen, and at
+// least one revision actually happened today (so an all-frozen board with no
+// activity doesn't advance the streak).
+const allRulesRevisedOrFrozen = computed(() => {
+  const reviewable = rules.value?.filter(rule => !rule.draft)
+  if (!reviewable?.length) return false
+  if (!reviewable.some(rule => isRevisedToday(rule.id))) return false
+  return reviewable.every(rule => isRevisedToday(rule.id) || isFrozen(rule.id))
+})
+
+watch([allRulesRevisedOrFrozen, streakLoaded], ([done, loaded]) => {
+  if (done && loaded) recordCompletion()
+}, { immediate: true })
 
 const filteredRules = computed(() => {
   return rules.value?.filter((rule) => {
@@ -61,6 +77,12 @@ function revisedLabel(ruleId: string) {
     <UPage>
       <UPageHeader title="Jagra" :ui="{ wrapper: 'flex flex-row items-center justify-between gap-4' }">
         <template #links>
+          <UTooltip text="Day streak">
+            <div class="flex items-center gap-1 rounded-full border border-default bg-elevated/50 px-2.5 py-1 text-sm font-medium text-highlighted">
+              <UIcon name="i-lucide-flame" class="size-4" :class="streak > 0 ? 'text-warning' : 'text-muted'" />
+              <span>{{ streak }}</span>
+            </div>
+          </UTooltip>
           <div class="flex items-center gap-1 rounded-full border border-default bg-elevated/50 p-1">
             <UTooltip text="Show drafts">
               <UButton

@@ -14,7 +14,7 @@ async function loadAll() {
 // session (e.g. Monday's review done Tuesday at 3am) still counts as Monday.
 const DAY_START_HOUR = 5
 
-function revisionDayKey(date: Date) {
+export function revisionDayKey(date: Date) {
   const shifted = new Date(date)
   shifted.setHours(shifted.getHours() - DAY_START_HOUR)
   return `${shifted.getFullYear()}-${shifted.getMonth()}-${shifted.getDate()}`
