@@ -42,6 +42,7 @@ async function open(ruleId: string) {
   modal.open({
     id: ruleId,
     showDrafts: showDrafts.value,
+    showRevisedToday: showRevisedToday.value,
     showFrozen: showFrozen.value,
   })
 }
