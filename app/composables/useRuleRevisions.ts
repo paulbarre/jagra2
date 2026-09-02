@@ -10,11 +10,18 @@ async function loadAll() {
   loaded.value = true
 }
 
-function isSameLocalDay(iso: string, now = new Date()) {
-  const d = new Date(iso)
-  return d.getFullYear() === now.getFullYear()
-    && d.getMonth() === now.getMonth()
-    && d.getDate() === now.getDate()
+// The revision "day" rolls over at 5am rather than midnight, so a late-night
+// session (e.g. Monday's review done Tuesday at 3am) still counts as Monday.
+const DAY_START_HOUR = 5
+
+function revisionDayKey(date: Date) {
+  const shifted = new Date(date)
+  shifted.setHours(shifted.getHours() - DAY_START_HOUR)
+  return `${shifted.getFullYear()}-${shifted.getMonth()}-${shifted.getDate()}`
+}
+
+function isSameRevisionDay(iso: string, now = new Date()) {
+  return revisionDayKey(new Date(iso)) === revisionDayKey(now)
 }
 
 export function useRuleRevisions() {
@@ -26,7 +33,7 @@ export function useRuleRevisions() {
 
   function isRevisedToday(ruleId: string) {
     const at = revisions.value.get(ruleId)
-    return !!at && isSameLocalDay(at)
+    return !!at && isSameRevisionDay(at)
   }
 
   async function markRevised(ruleId: string) {

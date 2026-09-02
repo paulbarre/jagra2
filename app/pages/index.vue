@@ -8,7 +8,7 @@ const { data: rules } = await useAsyncData('rules', () => {
 })
 
 const showDrafts = ref(false)
-const showRevisedToday = ref(true)
+const showRevisedToday = ref(false)
 const showFrozen = ref(false)
 
 const { isRevisedToday, getRevisedAt } = useRuleRevisions()
@@ -21,6 +21,16 @@ const filteredRules = computed(() => {
     const frozen = isFrozen(rule.id)
     if (!draft && !revisedToday && !frozen) return true
     return (draft && showDrafts.value) || (revisedToday && showRevisedToday.value) || (frozen && showFrozen.value)
+  })
+})
+
+const allCaughtUpToday = computed(() => {
+  if (!rules.value || filteredRules.value?.length !== 0) return false
+  if (!rules.value.some(rule => isRevisedToday(rule.id))) return false
+  return rules.value.every((rule) => {
+    if (rule.draft && !showDrafts.value) return true
+    if (isFrozen(rule.id) && !showFrozen.value) return true
+    return isRevisedToday(rule.id)
   })
 })
 
@@ -91,7 +101,13 @@ function revisedLabel(ruleId: string) {
       </UPageHeader>
       <UPageBody>
         <UEmpty
-          v-if="filteredRules?.length === 0"
+          v-if="allCaughtUpToday"
+          icon="i-lucide-calendar-check"
+          title="All caught up for today"
+          description="You've reviewed everything. Come back tomorrow."
+        />
+        <UEmpty
+          v-else-if="filteredRules?.length === 0"
           icon="i-lucide-search-x"
           title="No rules to show"
           description="Every rule is filtered out. Try adjusting the filters above."
