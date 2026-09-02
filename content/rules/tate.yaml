@@ -1,7 +1,17 @@
 id: tate
-title: "たて"
-draft: true
+title: "〜たて"
 meaning:
-  en: ""
+  en: just ~ / freshly ~
 notes:
-  en: ""
+  en: Indicates that something has just been done or completed. Often used for actions whose results are still fresh.
+structure:
+  - "**Vstem**たて"
+examples:
+  - ja: 炊きたてのご飯ってほんといいね。何杯でも食べられそう。
+  - ja: |
+      A：このおまんじゅう、また温かいよ。
+      B：うん。できたてを買ってきたの。
+  - ja: このベンチ、ペンキぬりたてだって。
+  - ja: |
+      A：ねえ、うちの姉の子がね、幼稚園で習った覚えたての歌と踊りを見せてくれたんだ。
+      B：そりゃ、かわいかっただろうね。
