@@ -11,8 +11,9 @@ const showDrafts = ref(false)
 const showRevisedToday = ref(false)
 const showFrozen = ref(false)
 
-const { isRevisedToday, getRevisedAt } = useRuleRevisions()
-const { isFrozen } = useRuleFrozen()
+const { loaded: revisionsLoaded, isRevisedToday, getRevisedAt } = useRuleRevisions()
+const { loaded: frozenLoaded, isFrozen } = useRuleFrozen()
+const ready = computed(() => revisionsLoaded.value && frozenLoaded.value)
 
 const filteredRules = computed(() => {
   return rules.value?.filter((rule) => {
@@ -100,8 +101,11 @@ function revisedLabel(ruleId: string) {
         </template>
       </UPageHeader>
       <UPageBody>
+        <div v-if="!ready" class="flex justify-center py-12">
+          <UIcon name="i-lucide-loader-2" class="size-6 animate-spin text-muted" />
+        </div>
         <UEmpty
-          v-if="allCaughtUpToday"
+          v-else-if="allCaughtUpToday"
           icon="i-lucide-calendar-check"
           title="All caught up for today"
           description="You've reviewed everything. Come back tomorrow."

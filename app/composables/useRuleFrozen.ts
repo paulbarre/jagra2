@@ -24,5 +24,5 @@ export function useRuleFrozen() {
     await getDb().ruleFrozen.put({ ruleId, frozenAt })
   }
 
-  return { isFrozen, markFrozen }
+  return { loaded: readonly(loaded), isFrozen, markFrozen }
 }

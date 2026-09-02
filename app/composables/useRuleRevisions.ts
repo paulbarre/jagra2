@@ -43,5 +43,5 @@ export function useRuleRevisions() {
     await getDb().ruleRevisions.put({ ruleId, revisedAt })
   }
 
-  return { getRevisedAt, isRevisedToday, markRevised }
+  return { loaded: readonly(loaded), getRevisedAt, isRevisedToday, markRevised }
 }
