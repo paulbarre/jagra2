@@ -148,7 +148,12 @@ function highlightParts(text: string) {
           @tutorial-end="tutorialActive = false"
         >
           <template #default="{ item }">
-            <UCard class="h-full">
+            <UCard class="h-full relative">
+              <UIcon
+                v-if="isFrozen(item.id)"
+                name="i-lucide-snowflake"
+                class="pointer-events-none absolute -right-12 -bottom-12 z-0 size-64 text-sky-500/10"
+              />
               <p v-if="item.rule.meaning?.en" class="mb-1 text-sm font-semibold text-primary">
                 {{ item.rule.meaning.en }}
               </p>
