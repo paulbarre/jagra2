@@ -152,6 +152,20 @@ function highlightParts(text: string) {
   if (lastIndex < text.length) parts.push({ text: text.slice(lastIndex) })
   return parts
 }
+
+// Structure templates use fixed codes (wrapped in `**...**`) to denote the
+// word class a pattern attaches to. Each code maps to display segments, so
+// e.g. `verb-stem` can render "V" followed by a struck-through "ます".
+const STRUCTURE_CODE_SEGMENTS: Record<string, { text: string, strike?: boolean }[]> = {
+  'noun': [{ text: 'N' }],
+  'a-adj': [{ text: 'ナAな' }],
+  'plain': [{ text: 'Pl' }],
+  'verb-stem': [{ text: 'V' }, { text: 'ます', strike: true }],
+}
+
+function structureCodeSegments(code: string) {
+  return STRUCTURE_CODE_SEGMENTS[code] ?? [{ text: code }]
+}
 </script>
 
 <template>
@@ -242,7 +256,11 @@ function highlightParts(text: string) {
                 <template #description>
                   <p v-for="(pattern, patternIndex) in item.rule.structure" :key="patternIndex">
                     <template v-for="(part, i) in highlightParts(pattern)" :key="i">
-                      <UBadge v-if="part.type === 'primary'" variant="subtle">{{ part.text }}</UBadge>
+                      <UBadge v-if="part.type === 'primary'" variant="subtle">
+                        <template v-for="(seg, si) in structureCodeSegments(part.text)" :key="si">
+                          <span :class="seg.strike ? 'line-through' : undefined">{{ seg.text }}</span>
+                        </template>
+                      </UBadge>
                       <UBadge v-else-if="part.type === 'secondary'" variant="subtle" color="secondary">{{ part.text }}</UBadge>
                       <template v-else><span>{{ part.text }}</span></template>
                     </template>
