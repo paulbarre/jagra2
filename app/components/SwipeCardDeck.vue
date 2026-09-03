@@ -10,6 +10,10 @@ const props = withDefaults(defineProps<{
   // accepts a resolver function.
   up?: SwipeAction | ((item: T) => SwipeAction)
   visibleCount?: number
+  // Like up, this can depend on the item (e.g. only pause the very first
+  // time a card is actually frozen, not on later freezes).
+  holdUp?: boolean | ((item: T) => boolean)
+  holdUpHint?: string
 }>(), {
   visibleCount: 3,
 })
@@ -19,6 +23,11 @@ function resolveUp(item: T | undefined) {
   return typeof props.up === 'function' ? props.up(item) : props.up
 }
 
+function resolveHoldUp(item: T | undefined) {
+  if (!props.holdUp || !item) return false
+  return typeof props.holdUp === 'function' ? props.holdUp(item) : props.holdUp
+}
+
 const emit = defineEmits<{
   left: [item: T]
   right: [item: T]
@@ -26,6 +35,8 @@ const emit = defineEmits<{
   empty: []
   tutorialStart: []
   tutorialEnd: []
+  holdUpStart: [item: T]
+  holdUpEnd: []
 }>()
 
 const STACK_OFFSET = 20
@@ -85,6 +96,19 @@ function onCardUp(item: T) {
   queue.value = queue.value.filter(entry => entry.id !== item.id)
   emit('up', item)
   if (queue.value.length === 0) emit('empty')
+}
+
+const HOLD_UP_DURATION = 2200
+const pausedItemId = ref<string | null>(null)
+
+function onCardUpPaused(item: T) {
+  pausedItemId.value = item.id
+  emit('holdUpStart', item)
+  window.setTimeout(() => {
+    cardRefMap.get(item.id)?.resumeUp()
+    pausedItemId.value = null
+    emit('holdUpEnd')
+  }, HOLD_UP_DURATION)
 }
 
 const TUTORIAL_HOLD = 2200
@@ -190,9 +214,11 @@ defineExpose({
           :up="resolveUp(item)"
           :interactive="index === 0"
           :depth="index"
+          :hold-up="resolveHoldUp(item)"
           @left="onCardLeft(item)"
           @right="onCardRight(item)"
           @up="onCardUp(item)"
+          @up-paused="onCardUpPaused(item)"
         >
           <slot :item="item" />
         </SwipeCard>
@@ -212,6 +238,21 @@ defineExpose({
           <UIcon :name="tutorialAction.icon" class="size-5 shrink-0" />
           <span>{{ tutorialAction.hint }}</span>
           <kbd class="rounded-md border border-white/40 bg-white/10 px-2 py-0.5 font-mono text-sm">{{ tutorialStep && KEY_SYMBOLS[tutorialStep] }}</kbd>
+        </div>
+      </Transition>
+
+      <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="opacity-0 translate-y-1 scale-95"
+        leave-active-class="transition duration-200 ease-in"
+        leave-to-class="opacity-0 translate-y-1 scale-95"
+      >
+        <div
+          v-if="pausedItemId && holdUpHint"
+          class="pointer-events-none absolute left-1/2 top-full z-30 mt-5 flex w-max max-w-[min(85vw,22rem)] -translate-x-1/2 items-center gap-2 rounded-full bg-sky-500 px-5 py-3 text-center text-base font-semibold text-white shadow-[0_12px_30px_-6px_rgba(0,0,0,0.6)]"
+        >
+          <UIcon name="i-lucide-snowflake" class="size-5 shrink-0" />
+          <span>{{ holdUpHint }}</span>
         </div>
       </Transition>
     </div>

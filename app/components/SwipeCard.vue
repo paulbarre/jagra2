@@ -14,9 +14,14 @@ const props = withDefaults(defineProps<{
   up?: SwipeAction
   interactive?: boolean
   depth?: number
+  // When true, an up-swipe pauses partway off-screen instead of completing
+  // immediately, so a caller can hold there to show an explanation before
+  // calling resumeUp() to finish the exit.
+  holdUp?: boolean
 }>(), {
   interactive: true,
   depth: 0,
+  holdUp: false,
 })
 
 const emit = defineEmits<{
@@ -24,6 +29,7 @@ const emit = defineEmits<{
   right: []
   up: []
   flying: [direction: 'left' | 'right' | 'up']
+  upPaused: []
 }>()
 
 const MASK_CLASSES: Record<SwipeActionColor, string> = {
@@ -90,6 +96,15 @@ function flyOut(direction: 'left' | 'right' | 'up') {
   if (flying.value) return
   flying.value = true
   emit('flying', direction)
+  if (direction === 'up' && props.holdUp) {
+    offsetY.value = -DEMO_DISTANCE
+    window.setTimeout(() => emit('upPaused'), FLY_OUT_DURATION)
+    return
+  }
+  completeExit(direction)
+}
+
+function completeExit(direction: 'left' | 'right' | 'up') {
   if (direction === 'up') {
     const distance = (el.value?.offsetHeight ?? window.innerHeight) + 200
     offsetY.value = -distance
@@ -103,6 +118,12 @@ function flyOut(direction: 'left' | 'right' | 'up') {
     else if (direction === 'right') emit('right')
     else emit('up')
   }, FLY_OUT_DURATION)
+}
+
+// Resumes an up-swipe that was paused mid-flight by holdUp, carrying it the
+// rest of the way off-screen.
+function resumeUp() {
+  completeExit('up')
 }
 
 // Used by the tutorial to demo a swipe without actually dismissing the
@@ -161,6 +182,7 @@ defineExpose({
   swipeBack,
   reset,
   triggerSwipe,
+  resumeUp,
 })
 
 const rotation = computed(() => {

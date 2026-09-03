@@ -50,6 +50,22 @@ function upAction(item: { id: string }) {
   return { icon: 'i-lucide-snowflake', label: 'Frozen', color: 'sky' as const, hint: 'Swipe up to freeze a rule' }
 }
 
+// The very first time a card actually gets frozen (not thawed), the swipe
+// pauses mid-flight so we can explain how to undo it — swiping up on an
+// already-frozen card thaws it (see onCardUp above).
+const { hasSeenTutorial: hasSeenThawTutorial, markTutorialSeen: markThawTutorialSeen } = useFrozenThawTutorial()
+
+function holdUpForItem(item: { id: string }) {
+  return !isFrozen(item.id) && !hasSeenThawTutorial()
+}
+
+const holdUpActive = ref(false)
+
+function onHoldUpStart() {
+  markThawTutorialSeen()
+  holdUpActive.value = true
+}
+
 const deckRef = ref<{ playTutorial: () => Promise<void> } | null>(null)
 const { hasSeenTutorial, markTutorialSeen } = useSwipeTutorial()
 const tutorialActive = ref(false)
@@ -130,7 +146,7 @@ function highlightParts(text: string) {
     fullscreen
     :content="{ onOpenAutoFocus: (e: Event) => e.preventDefault() }"
     :ui="{
-      overlay: tutorialActive ? 'bg-black/90 transition-colors duration-300' : 'transition-colors duration-300',
+      overlay: (tutorialActive || holdUpActive) ? 'bg-black/90 transition-colors duration-300' : 'transition-colors duration-300',
       content: 'items-center justify-center bg-transparent ring-0 shadow-none rounded-none overflow-visible pointer-events-none!',
     }"
     @after:enter="onModalEnter"
@@ -155,11 +171,15 @@ function highlightParts(text: string) {
           :left="{ icon: 'i-lucide-check', label: 'Reviewed', color: 'success', hint: 'Swipe left to mark a rule as reviewed' }"
           :right="{ icon: 'i-lucide-rotate-ccw', label: 'Later', color: 'warning', hint: 'Swipe right to come back to it later' }"
           :up="upAction"
+          :hold-up="holdUpForItem"
+          hold-up-hint="Frozen! Swipe up again on a frozen rule to thaw it."
           @left="onCardLeft"
           @up="onCardUp"
           @empty="onEmptied"
           @tutorial-start="tutorialActive = true"
           @tutorial-end="tutorialActive = false"
+          @hold-up-start="onHoldUpStart"
+          @hold-up-end="holdUpActive = false"
         >
           <template #default="{ item }">
             <UCard class="h-full relative">
