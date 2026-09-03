@@ -36,8 +36,8 @@ Each grammar rule is a YAML file under [content/rules/](content/rules/), one fil
 - `draft` — true while a rule's content is still being written; drafts are hidden by default in the UI
 - `meaning.en` — short English gloss
 - `notes.en` / `notes.ja` — longer explanation
-- `structure` — optional array of pattern templates, with the grammar point wrapped in `**...**` for highlighting
-- `examples` — optional array of `{ ja, en? }` example sentences, same `**...**` highlight convention
+- `structure` — optional array of pattern templates, with the grammar point wrapped in `**...**` for primary-color highlighting (optionally `__...__` for a secondary-color highlight, e.g. to mark a related word alongside the grammar point)
+- `examples` — optional array of `{ ja, en? }` example sentences, same `**...**` / `__...__` highlight convention
 
 Rules are queried at runtime via `queryCollection('rules')` (Nuxt Content). Many rules currently exist as draft stubs (just `id`/`title`/`draft: true`) awaiting content.
 

@@ -136,11 +136,21 @@ function onUpdateOpen(value: boolean) {
   if (!value) emit('close', { action: 'reviewed', frozeCard: frozeCard.value, revisedCard: revisedCard.value })
 }
 
+// `**...**` highlights in the primary color, `__...__` in the secondary color.
 function highlightParts(text: string) {
-  return text.split('**').map((part, i) => ({
-    text: part,
-    highlight: i % 2 === 1,
-  }))
+  const parts: { text: string, type?: 'primary' | 'secondary' }[] = []
+  const regex = /\*\*(.+?)\*\*|__(.+?)__/g
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+  while ((match = regex.exec(text))) {
+    if (match.index > lastIndex) parts.push({ text: text.slice(lastIndex, match.index) })
+    parts.push(match[1] !== undefined
+      ? { text: match[1], type: 'primary' }
+      : { text: match[2]!, type: 'secondary' })
+    lastIndex = regex.lastIndex
+  }
+  if (lastIndex < text.length) parts.push({ text: text.slice(lastIndex) })
+  return parts
 }
 </script>
 
@@ -206,7 +216,8 @@ function highlightParts(text: string) {
                 <template #description>
                   <p class="whitespace-pre-line">
                     <template v-for="(part, i) in highlightParts(item.example.ja)" :key="i">
-                      <span v-if="part.highlight" class="text-primary">{{ part.text }}</span>
+                      <span v-if="part.type === 'primary'" class="text-primary">{{ part.text }}</span>
+                      <span v-else-if="part.type === 'secondary'" class="text-secondary">{{ part.text }}</span>
                       <template v-else>{{ part.text }}</template>
                     </template>
                   </p>
@@ -231,7 +242,8 @@ function highlightParts(text: string) {
                 <template #description>
                   <p v-for="(pattern, patternIndex) in item.rule.structure" :key="patternIndex">
                     <template v-for="(part, i) in highlightParts(pattern)" :key="i">
-                      <UBadge v-if="part.highlight" variant="subtle">{{ part.text }}</UBadge>
+                      <UBadge v-if="part.type === 'primary'" variant="subtle">{{ part.text }}</UBadge>
+                      <UBadge v-else-if="part.type === 'secondary'" variant="subtle" color="secondary">{{ part.text }}</UBadge>
                       <template v-else><span>{{ part.text }}</span></template>
                     </template>
                   </p>
