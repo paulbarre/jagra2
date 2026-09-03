@@ -39,5 +39,11 @@ export function useRuleFrozen() {
     await getDb().ruleFrozen.put({ ruleId, frozenAt })
   }
 
-  return { loaded: readonly(loaded), isFrozen, markFrozen }
+  async function markThawed(ruleId: string) {
+    if (!import.meta.client) return
+    frozen.value.delete(ruleId)
+    await getDb().ruleFrozen.delete(ruleId)
+  }
+
+  return { loaded: readonly(loaded), isFrozen, markFrozen, markThawed }
 }

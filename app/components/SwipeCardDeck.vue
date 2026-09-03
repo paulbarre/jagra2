@@ -5,11 +5,19 @@ const props = withDefaults(defineProps<{
   items: T[]
   left?: SwipeAction
   right?: SwipeAction
-  up?: SwipeAction
+  // Unlike left/right, the up action can depend on the card itself (e.g. an
+  // already-frozen card swiped up thaws instead of freezing), so it also
+  // accepts a resolver function.
+  up?: SwipeAction | ((item: T) => SwipeAction)
   visibleCount?: number
 }>(), {
   visibleCount: 3,
 })
+
+function resolveUp(item: T | undefined) {
+  if (!props.up || !item) return undefined
+  return typeof props.up === 'function' ? props.up(item) : props.up
+}
 
 const emit = defineEmits<{
   left: [item: T]
@@ -103,7 +111,7 @@ const tutorialPlaying = ref(false)
 const tutorialAction = computed(() => {
   if (tutorialStep.value === 'left') return props.left
   if (tutorialStep.value === 'right') return props.right
-  if (tutorialStep.value === 'up') return props.up
+  if (tutorialStep.value === 'up') return resolveUp(queue.value[0])
   return undefined
 })
 const tutorialBgClass = computed(() => BG_CLASSES[tutorialAction.value?.color ?? 'primary'])
@@ -179,7 +187,7 @@ defineExpose({
           :ref="(el: unknown) => setCardRef(item.id, el)"
           :left="left"
           :right="right"
-          :up="up"
+          :up="resolveUp(item)"
           :interactive="index === 0"
           :depth="index"
           @left="onCardLeft(item)"

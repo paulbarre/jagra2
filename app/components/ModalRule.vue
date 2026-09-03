@@ -23,7 +23,7 @@ const { data: rules } = await useAsyncData('rules', () => {
 const rule = computed(() => rules.value?.find(r => r.id === props.id))
 
 const { isRevisedToday, markRevised } = useRuleRevisions()
-const { isFrozen, markFrozen } = useRuleFrozen()
+const { isFrozen, markFrozen, markThawed } = useRuleFrozen()
 
 function onCardLeft(item: { id: string }) {
   markRevised(item.id)
@@ -31,9 +31,23 @@ function onCardLeft(item: { id: string }) {
 
 const frozeCard = ref(false)
 
+// Swiping up on a card that's already frozen (visible when the frozen
+// filter is on) thaws it instead of re-freezing it — otherwise there'd be
+// no way to unfreeze a rule from the swipe deck at all.
 function onCardUp(item: { id: string }) {
+  if (isFrozen(item.id)) {
+    markThawed(item.id)
+    return
+  }
   markFrozen(item.id)
   frozeCard.value = true
+}
+
+function upAction(item: { id: string }) {
+  if (isFrozen(item.id)) {
+    return { icon: 'i-lucide-flame', label: 'Thawed', color: 'error' as const, hint: 'Swipe up to unfreeze this rule' }
+  }
+  return { icon: 'i-lucide-snowflake', label: 'Frozen', color: 'sky' as const, hint: 'Swipe up to freeze a rule' }
 }
 
 const deckRef = ref<{ playTutorial: () => Promise<void> } | null>(null)
@@ -140,7 +154,7 @@ function highlightParts(text: string) {
           :items="deckItems"
           :left="{ icon: 'i-lucide-check', label: 'Reviewed', color: 'success', hint: 'Swipe left to mark a rule as reviewed' }"
           :right="{ icon: 'i-lucide-rotate-ccw', label: 'Later', color: 'warning', hint: 'Swipe right to come back to it later' }"
-          :up="{ icon: 'i-lucide-snowflake', label: 'Frozen', color: 'sky', hint: 'Swipe up to freeze a rule' }"
+          :up="upAction"
           @left="onCardLeft"
           @up="onCardUp"
           @empty="onEmptied"
