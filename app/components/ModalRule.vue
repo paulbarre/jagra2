@@ -13,7 +13,7 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-  close: [payload?: { action: 'reviewed' }]
+  close: [payload?: { action: 'reviewed', frozeCard?: boolean }]
 }>()
 
 const { data: rules } = await useAsyncData('rules', () => {
@@ -29,8 +29,11 @@ function onCardLeft(item: { id: string }) {
   markRevised(item.id)
 }
 
+const frozeCard = ref(false)
+
 function onCardUp(item: { id: string }) {
   markFrozen(item.id)
+  frozeCard.value = true
 }
 
 const deckRef = ref<{ playTutorial: () => Promise<void> } | null>(null)
@@ -84,7 +87,20 @@ const deckItems = (() => {
 })()
 
 function onEmptied() {
-  emit('close', { action: 'reviewed' })
+  emit('close', { action: 'reviewed', frozeCard: frozeCard.value })
+}
+
+// The deck emptying out is only one way the modal closes: it can also be
+// dismissed early (Escape, clicking the backdrop) before every card has been
+// swiped. UModal's `open` prop/`update:open` emit reach it via attribute
+// fallthrough from the overlay system's own `v-model:open` — this only
+// catches child-initiated closes (`update:open` firing false), not the
+// deck-emptied path above, which closes the overlay from the *outside* by
+// setting `isOpen` directly. Without this, an early dismiss resolves the
+// overlay's close promise with no payload at all, and any card frozen so
+// far is silently lost from `index.vue`'s perspective.
+function onUpdateOpen(value: boolean) {
+  if (!value) emit('close', { action: 'reviewed', frozeCard: frozeCard.value })
 }
 
 function highlightParts(text: string) {
@@ -104,6 +120,7 @@ function highlightParts(text: string) {
       content: 'items-center justify-center bg-transparent ring-0 shadow-none rounded-none overflow-visible pointer-events-none!',
     }"
     @after:enter="onModalEnter"
+    @update:open="onUpdateOpen"
   >
     <template #content>
       <UButton
