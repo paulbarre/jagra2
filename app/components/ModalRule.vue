@@ -13,7 +13,7 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-  close: [payload?: { action: 'reviewed', frozeCard?: boolean }]
+  close: [payload?: { action: 'reviewed', frozeCard?: boolean, revisedCard?: boolean }]
 }>()
 
 const { data: rules } = await useAsyncData('rules', () => {
@@ -25,8 +25,11 @@ const rule = computed(() => rules.value?.find(r => r.id === props.id))
 const { isRevisedToday, markRevised } = useRuleRevisions()
 const { isFrozen, markFrozen, markThawed } = useRuleFrozen()
 
+const revisedCard = ref(false)
+
 function onCardLeft(item: { id: string }) {
   markRevised(item.id)
+  revisedCard.value = true
 }
 
 const frozeCard = ref(false)
@@ -117,7 +120,7 @@ const deckItems = (() => {
 })()
 
 function onEmptied() {
-  emit('close', { action: 'reviewed', frozeCard: frozeCard.value })
+  emit('close', { action: 'reviewed', frozeCard: frozeCard.value, revisedCard: revisedCard.value })
 }
 
 // The deck emptying out is only one way the modal closes: it can also be
@@ -130,7 +133,7 @@ function onEmptied() {
 // overlay's close promise with no payload at all, and any card frozen so
 // far is silently lost from `index.vue`'s perspective.
 function onUpdateOpen(value: boolean) {
-  if (!value) emit('close', { action: 'reviewed', frozeCard: frozeCard.value })
+  if (!value) emit('close', { action: 'reviewed', frozeCard: frozeCard.value, revisedCard: revisedCard.value })
 }
 
 function highlightParts(text: string) {

@@ -55,13 +55,20 @@ const overlay = useOverlay()
 const modal = overlay.create(ModalRule)
 
 const { hasSeenTutorial: hasSeenFrozenTutorial, markTutorialSeen: markFrozenTutorialSeen } = useFrozenFilterTutorial()
-// Two separate refs so the button highlight can linger a beat after the
-// overlay/callout fade out — the button should be visible, un-dimmed, and
-// still glowing for a moment before it settles back to normal.
+const { hasSeenTutorial: hasSeenRevisedTodayTutorial, markTutorialSeen: markRevisedTodayTutorialSeen } = useRevisedTodayFilterTutorial()
+// Two separate refs per tutorial so each button highlight can linger a beat
+// after the overlay/callout fade out — the button should be visible,
+// un-dimmed, and still glowing for a moment before it settles back to normal.
 const showFrozenOverlay = ref(false)
 const showFrozenHighlight = ref(false)
-const FROZEN_TUTORIAL_HOLD = 4000
-const FROZEN_HIGHLIGHT_LINGER = 700
+const showRevisedTodayOverlay = ref(false)
+const showRevisedTodayHighlight = ref(false)
+const TUTORIAL_HOLD = 4000
+const HIGHLIGHT_LINGER = 700
+
+function delay(ms: number) {
+  return new Promise<void>(resolve => setTimeout(resolve, ms))
+}
 
 async function open(ruleId: string) {
   const result = await modal.open({
@@ -71,27 +78,51 @@ async function open(ruleId: string) {
     showFrozen: showFrozen.value,
   }).result
 
+  // Sequenced rather than parallel: both can fire off a single close (a card
+  // was both reviewed and frozen this session), and showing two full-screen
+  // callouts at once would be unreadable.
+  if (result?.revisedCard && !hasSeenRevisedTodayTutorial()) {
+    markRevisedTodayTutorialSeen()
+    await triggerRevisedTodayTutorial()
+  }
+
   if (result?.frozeCard && !hasSeenFrozenTutorial()) {
     markFrozenTutorialSeen()
-    triggerFrozenTutorial()
+    await triggerFrozenTutorial()
   }
 }
 
 function dismissFrozenTutorial() {
   showFrozenOverlay.value = false
-  setTimeout(() => { showFrozenHighlight.value = false }, FROZEN_HIGHLIGHT_LINGER)
+  setTimeout(() => { showFrozenHighlight.value = false }, HIGHLIGHT_LINGER)
 }
 
-function triggerFrozenTutorial() {
+async function triggerFrozenTutorial() {
   showFrozenOverlay.value = true
   showFrozenHighlight.value = true
-  setTimeout(dismissFrozenTutorial, FROZEN_TUTORIAL_HOLD)
+  await delay(TUTORIAL_HOLD)
+  dismissFrozenTutorial()
+  await delay(HIGHLIGHT_LINGER)
 }
 
-// Dev helper: run `triggerFrozenTutorial()` in the browser console to preview
-// the frozen-filter callout without having to freeze a card for the first time.
+function dismissRevisedTodayTutorial() {
+  showRevisedTodayOverlay.value = false
+  setTimeout(() => { showRevisedTodayHighlight.value = false }, HIGHLIGHT_LINGER)
+}
+
+async function triggerRevisedTodayTutorial() {
+  showRevisedTodayOverlay.value = true
+  showRevisedTodayHighlight.value = true
+  await delay(TUTORIAL_HOLD)
+  dismissRevisedTodayTutorial()
+  await delay(HIGHLIGHT_LINGER)
+}
+
+// Dev helpers: run these in the browser console to preview a callout without
+// having to freeze/review a card for the first time.
 if (import.meta.dev && import.meta.client) {
   ;(window as unknown as { triggerFrozenTutorial: typeof triggerFrozenTutorial }).triggerFrozenTutorial = triggerFrozenTutorial
+  ;(window as unknown as { triggerRevisedTodayTutorial: typeof triggerRevisedTodayTutorial }).triggerRevisedTodayTutorial = triggerRevisedTodayTutorial
 }
 
 const dateFormatter = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
@@ -111,9 +142,9 @@ function revisedLabel(ruleId: string) {
     leave-to-class="opacity-0"
   >
     <div
-      v-if="showFrozenOverlay"
+      v-if="showFrozenOverlay || showRevisedTodayOverlay"
       class="fixed inset-0 z-40 bg-black/90"
-      @click="dismissFrozenTutorial"
+      @click="showRevisedTodayOverlay ? dismissRevisedTodayTutorial() : dismissFrozenTutorial()"
     />
   </Transition>
   <UContainer>
@@ -139,18 +170,36 @@ function revisedLabel(ruleId: string) {
                 @click="showDrafts = !showDrafts"
               />
             </UTooltip>
-            <UTooltip text="Show reviewed today">
-              <UButton
-                icon="i-lucide-eye"
-                :color="showRevisedToday ? 'primary' : 'neutral'"
-                :variant="showRevisedToday ? 'subtle' : 'ghost'"
-                size="xs"
-                square
-                class="rounded-full"
-                aria-label="Show reviewed today"
-                @click="showRevisedToday = !showRevisedToday"
-              />
-            </UTooltip>
+            <div class="relative" :class="showRevisedTodayHighlight ? 'z-50' : ''">
+              <UTooltip text="Show reviewed today">
+                <UButton
+                  icon="i-lucide-eye"
+                  :color="showRevisedToday || showRevisedTodayHighlight ? 'primary' : 'neutral'"
+                  :variant="showRevisedToday || showRevisedTodayHighlight ? 'subtle' : 'ghost'"
+                  size="xs"
+                  square
+                  class="rounded-full transition-shadow duration-300"
+                  :class="showRevisedTodayHighlight ? 'ring-4 ring-primary/70' : ''"
+                  aria-label="Show reviewed today"
+                  @click="showRevisedToday = !showRevisedToday"
+                />
+              </UTooltip>
+
+              <Transition
+                enter-active-class="transition duration-200 ease-out"
+                enter-from-class="opacity-0 translate-y-1 scale-95"
+                leave-active-class="transition duration-200 ease-in"
+                leave-to-class="opacity-0 translate-y-1 scale-95"
+              >
+                <div
+                  v-if="showRevisedTodayHighlight"
+                  class="absolute right-0 top-full z-50 mt-3 flex w-max max-w-[min(85vw,20rem)] items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-center text-sm font-semibold text-white shadow-[0_12px_30px_-6px_rgba(0,0,0,0.6)]"
+                >
+                  <UIcon name="i-lucide-eye" class="size-4 shrink-0" />
+                  <span>Rules you've reviewed today go here — tap to see them</span>
+                </div>
+              </Transition>
+            </div>
             <div class="relative" :class="showFrozenHighlight ? 'z-50' : ''">
               <UTooltip text="Show frozen">
                 <UButton
