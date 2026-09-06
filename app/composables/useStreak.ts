@@ -20,8 +20,19 @@ function previousRevisionDayKey(now = new Date()) {
   return revisionDayKey(yesterday)
 }
 
+// A streak only stays "alive" if the last completed day was today or
+// yesterday. Once a whole revision day (5am-to-5am) has gone by with an
+// incomplete board, the streak is broken and displays as 0 even before the
+// next completion (or lack thereof) gets persisted.
+function isStreakActive(now = new Date()) {
+  if (!lastCompletedDayKey.value) return true
+  return lastCompletedDayKey.value === revisionDayKey(now) || lastCompletedDayKey.value === previousRevisionDayKey(now)
+}
+
 export function useStreak() {
   if (import.meta.client && !loaded.value) loadAll()
+
+  const streak = computed(() => isStreakActive() ? count.value : 0)
 
   async function recordCompletion() {
     if (!import.meta.client || !loaded.value) return
@@ -33,5 +44,5 @@ export function useStreak() {
     await getDb().streak.put({ id: STREAK_ID, count: count.value, lastCompletedDayKey: todayKey })
   }
 
-  return { loaded: readonly(loaded), streak: readonly(count), recordCompletion }
+  return { loaded: readonly(loaded), streak, recordCompletion }
 }
