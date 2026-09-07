@@ -270,13 +270,21 @@ function revisedLabel(ruleId: string) {
               class="pointer-events-none absolute -right-5 -bottom-5 z-0 size-28 text-sky-500/30"
             />
             <template #footer>
-              <div class="flex items-center gap-1.5 text-sm text-muted">
-                <UIcon
-                  :name="getRevisedAt(rule.id) ? 'i-lucide-eye' : 'i-lucide-eye-off'"
-                  class="size-4"
-                  :class="isRevisedToday(rule.id) ? 'text-primary' : 'text-muted'"
-                />
-                <span>{{ revisedLabel(rule.id) }}</span>
+              <div class="flex w-full items-center gap-2">
+                <div class="flex items-center gap-1.5 text-sm text-muted">
+                  <UIcon
+                    :name="getRevisedAt(rule.id) ? 'i-lucide-eye' : 'i-lucide-eye-off'"
+                    class="size-4"
+                    :class="isRevisedToday(rule.id) ? 'text-primary' : 'text-muted'"
+                  />
+                  <span>{{ revisedLabel(rule.id) }}</span>
+                </div>
+                <div class="flex-1" />
+                <div v-if="rule.tags?.length" class="flex flex-wrap justify-end gap-1">
+                  <UBadge v-for="tag in rule.tags" :key="tag" variant="subtle" color="neutral" size="sm">
+                    {{ tag }}
+                  </UBadge>
+                </div>
               </div>
             </template>
           </UPageCard>

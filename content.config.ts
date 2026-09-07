@@ -17,6 +17,7 @@ export default defineContentConfig({
           ja: z.string().optional(),
         }),
         structure: z.array(z.string()).optional(),
+        tags: z.array(z.string()).optional(),
         examples: z.array(z.object({
           ja: z.string(),
           en: z.string().optional(),

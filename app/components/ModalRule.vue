@@ -221,6 +221,11 @@ function structureCodeSegments(code: string) {
               <h1 class="text-3xl sm:text-4xl text-pretty font-bold text-highlighted">
                 {{ item.rule.title }}
               </h1>
+              <div v-if="item.rule.tags?.length" class="mt-2 flex flex-wrap gap-1">
+                <UBadge v-for="tag in item.rule.tags" :key="tag" variant="subtle" color="neutral" size="sm">
+                  {{ tag }}
+                </UBadge>
+              </div>
               <UPageFeature
                 v-if="item.example"
                 class="mt-6"
