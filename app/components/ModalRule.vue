@@ -6,10 +6,12 @@ const props = withDefaults(defineProps<{
   showDrafts?: boolean
   showRevisedToday?: boolean
   showFrozen?: boolean
+  activeTag?: string | null
 }>(), {
   showDrafts: false,
   showRevisedToday: false,
   showFrozen: false,
+  activeTag: null,
 })
 
 const emit = defineEmits<{
@@ -106,6 +108,7 @@ const deckItems = (() => {
   const value = rule.value
   const others = shuffle(rules.value.filter((r) => {
     if (r.id === value.id) return false
+    if (props.activeTag && !r.tags?.includes(props.activeTag)) return false
     const draft = r.draft
     const revisedToday = isRevisedToday(r.id)
     const frozen = isFrozen(r.id)

@@ -10,6 +10,11 @@ const { data: rules } = await useAsyncData('rules', () => {
 const showDrafts = ref(false)
 const showRevisedToday = ref(false)
 const showFrozen = ref(false)
+const activeTag = ref<string | null>(null)
+
+function toggleTag(tag: string) {
+  activeTag.value = activeTag.value === tag ? null : tag
+}
 
 const { loaded: revisionsLoaded, isRevisedToday, getRevisedAt } = useRuleRevisions()
 const { loaded: frozenLoaded, isFrozen } = useRuleFrozen()
@@ -33,6 +38,7 @@ watch([allRulesRevisedOrFrozen, streakLoaded], ([done, loaded]) => {
 
 const filteredRules = computed(() => {
   return rules.value?.filter((rule) => {
+    if (activeTag.value && !rule.tags?.includes(activeTag.value)) return false
     const draft = rule.draft
     const revisedToday = isRevisedToday(rule.id)
     const frozen = isFrozen(rule.id)
@@ -76,6 +82,7 @@ async function open(ruleId: string) {
     showDrafts: showDrafts.value,
     showRevisedToday: showRevisedToday.value,
     showFrozen: showFrozen.value,
+    activeTag: activeTag.value,
   }).result
 
   // Sequenced rather than parallel: both can fire off a single close (a card
@@ -233,6 +240,18 @@ function revisedLabel(ruleId: string) {
           </div>
         </template>
       </UPageHeader>
+      <div v-if="activeTag" class="mb-4">
+        <UButton
+          :label="activeTag"
+          icon="i-lucide-tag"
+          trailing-icon="i-lucide-x"
+          color="primary"
+          variant="subtle"
+          size="xs"
+          class="rounded-full"
+          @click="activeTag = null"
+        />
+      </div>
       <UPageBody>
         <div v-if="!ready" class="flex justify-center py-12">
           <UIcon name="i-lucide-loader-2" class="size-6 animate-spin text-muted" />
@@ -281,7 +300,15 @@ function revisedLabel(ruleId: string) {
                 </div>
                 <div class="flex-1" />
                 <div v-if="rule.tags?.length" class="flex flex-wrap justify-end gap-1">
-                  <UBadge v-for="tag in rule.tags" :key="tag" variant="subtle" color="neutral" size="sm">
+                  <UBadge
+                    v-for="tag in rule.tags"
+                    :key="tag"
+                    :variant="activeTag === tag ? 'solid' : 'subtle'"
+                    :color="activeTag === tag ? 'primary' : 'neutral'"
+                    size="sm"
+                    class="cursor-pointer"
+                    @click.stop="toggleTag(tag)"
+                  >
                     {{ tag }}
                   </UBadge>
                 </div>
