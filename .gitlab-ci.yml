@@ -5,6 +5,7 @@ stages:
 
 variables:
   NUXT_APP_BASE_URL: "/${CI_PROJECT_NAME}/"
+  NUXT_PUBLIC_CONTENT_COLLECTION: "kanjis"
   PNPM_HOME: "${CI_PROJECT_DIR}/.pnpm-home"
 
 cache:
