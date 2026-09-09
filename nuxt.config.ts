@@ -4,5 +4,8 @@ export default defineNuxtConfig({
   devServer: { port: 3100, host: '0.0.0.0' },
   devtools: { enabled: true },
   modules: ['@nuxt/ui', '@nuxt/content'],
-  css: ['~/assets/css/main.css']
+  css: ['~/assets/css/main.css'],
+  content: {
+    experimental: { sqliteConnector: 'native' },
+  },
 })
