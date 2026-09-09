@@ -13,6 +13,7 @@ export default defineNuxtConfig({
     // so the app knows which collection was actually mounted at build time.
     public: {
       contentCollection: 'rules',
+      appName: 'Jagra',
     },
   },
 })

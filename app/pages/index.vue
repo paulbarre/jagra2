@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import ModalRule from '~/components/ModalRule.vue'
 
-const { public: { contentCollection } } = useRuntimeConfig()
+const { public: { contentCollection, appName } } = useRuntimeConfig()
+
+useHead({ title: appName })
 
 const { data: rules } = await useAsyncData(contentCollection, () => {
   // The active collection is resolved from an env var at build time (see
@@ -160,7 +162,7 @@ function revisedLabel(ruleId: string) {
   </Transition>
   <UContainer>
     <UPage>
-      <UPageHeader title="Jagra" :ui="{ wrapper: 'flex flex-row items-center justify-between gap-4' }">
+      <UPageHeader :title="appName" :ui="{ wrapper: 'flex flex-row items-center justify-between gap-4' }">
         <template #links>
           <UTooltip text="Day streak">
             <div class="flex items-center gap-1 rounded-full border border-default bg-elevated/50 px-2.5 py-1 text-sm font-medium text-highlighted">
