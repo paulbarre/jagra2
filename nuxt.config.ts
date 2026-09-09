@@ -8,4 +8,11 @@ export default defineNuxtConfig({
   content: {
     experimental: { sqliteConnector: 'native' },
   },
+  runtimeConfig: {
+    // Mirrors content.config.ts's own read of NUXT_PUBLIC_CONTENT_COLLECTION
+    // so the app knows which collection was actually mounted at build time.
+    public: {
+      contentCollection: 'rules',
+    },
+  },
 })

@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import ModalRule from '~/components/ModalRule.vue'
 
-const { data: rules } = await useAsyncData('rules', () => {
-  return queryCollection('rules')
+const { public: { contentCollection } } = useRuntimeConfig()
+
+const { data: rules } = await useAsyncData(contentCollection, () => {
+  // The active collection is resolved from an env var at build time (see
+  // content.config.ts), so its literal name isn't known statically here.
+  return queryCollection(contentCollection as any)
     .order('title', 'DESC')
     .all()
 })

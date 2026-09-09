@@ -18,8 +18,11 @@ const emit = defineEmits<{
   close: [payload?: { action: 'reviewed', frozeCard?: boolean, revisedCard?: boolean }]
 }>()
 
-const { data: rules } = await useAsyncData('rules', () => {
-  return queryCollection('rules').all()
+const { public: { contentCollection } } = useRuntimeConfig()
+
+const { data: rules } = await useAsyncData(contentCollection, () => {
+  // Same env-resolved collection name as index.vue — see content.config.ts.
+  return queryCollection(contentCollection as any).all()
 })
 
 const rule = computed(() => rules.value?.find(r => r.id === props.id))
