@@ -14,6 +14,10 @@ export default defineNuxtConfig({
     public: {
       contentCollection: 'rules',
       appName: 'Jagra',
+      // Applied to app.config.ts's colors by app/plugins/theme.ts. Unlike a
+      // raw process.env read, runtimeConfig.public is serialized to the
+      // client, so server and client agree on the theme after hydration.
+      uiTheme: 'sakura',
     },
   },
 })
