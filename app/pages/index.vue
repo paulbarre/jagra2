@@ -187,12 +187,12 @@ function revisedLabel(ruleId: string) {
               <UTooltip text="Show reviewed today">
                 <UButton
                   icon="i-lucide-eye"
-                  :color="showRevisedToday || showRevisedTodayHighlight ? 'primary' : 'neutral'"
+                  :color="showRevisedToday || showRevisedTodayHighlight ? 'success' : 'neutral'"
                   :variant="showRevisedToday || showRevisedTodayHighlight ? 'subtle' : 'ghost'"
                   size="xs"
                   square
                   class="rounded-full transition-shadow duration-300"
-                  :class="showRevisedTodayHighlight ? 'ring-4 ring-primary/70' : ''"
+                  :class="showRevisedTodayHighlight ? 'ring-4 ring-success/70' : ''"
                   aria-label="Show reviewed today"
                   @click="showRevisedToday = !showRevisedToday"
                 />
@@ -206,7 +206,7 @@ function revisedLabel(ruleId: string) {
               >
                 <div
                   v-if="showRevisedTodayHighlight"
-                  class="absolute right-0 top-full z-50 mt-3 flex w-max max-w-[min(85vw,20rem)] items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-center text-sm font-semibold text-white shadow-[0_12px_30px_-6px_rgba(0,0,0,0.6)]"
+                  class="absolute right-0 top-full z-50 mt-3 flex w-max max-w-[min(85vw,20rem)] items-center gap-2 rounded-full bg-success px-4 py-2.5 text-center text-sm font-semibold text-white shadow-[0_12px_30px_-6px_rgba(0,0,0,0.6)]"
                 >
                   <UIcon name="i-lucide-eye" class="size-4 shrink-0" />
                   <span>Rules you've reviewed today go here — tap to see them</span>
@@ -300,7 +300,7 @@ function revisedLabel(ruleId: string) {
                   <UIcon
                     :name="getRevisedAt(rule.id) ? 'i-lucide-eye' : 'i-lucide-eye-off'"
                     class="size-4"
-                    :class="isRevisedToday(rule.id) ? 'text-primary' : 'text-muted'"
+                    :class="isRevisedToday(rule.id) ? 'text-success' : 'text-muted'"
                   />
                   <span>{{ revisedLabel(rule.id) }}</span>
                 </div>
