@@ -32,8 +32,29 @@ const collectionDefs = {
     type: 'data',
     source: 'kanjis/**.yaml',
     schema: z.object({
-      id: z.string(),
       title: z.string(),
+      draft: z.boolean().default(false),
+      meaning: z.object({
+        en: z.string(),
+      }),
+      readings: z.object({
+        on: z.array(z.string()).optional(),
+        kun: z.array(z.string()).optional(),
+      }).optional(),
+      strokeCount: z.number().optional(),
+      jlpt: z.enum(['N5', 'N4', 'N3', 'N2', 'N1']).optional(),
+      notes: z.object({
+        en: z.string().optional(),
+        ja: z.string().optional(),
+      }).optional(),
+      tags: z.array(z.string()).optional(),
+      // Vocabulary examples using the kanji, same `**...**`/`__...__` highlight
+      // convention as rules' `examples[].ja` — wraps the target kanji's occurrence.
+      examples: z.array(z.object({
+        word: z.string(),
+        reading: z.string(),
+        en: z.string().optional(),
+      })).optional(),
     })
   }),
 }

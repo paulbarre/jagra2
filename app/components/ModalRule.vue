@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import SwipeCardDeck from './SwipeCardDeck.vue'
+import CardKanji from './CardKanji.vue'
+import { highlightParts } from '~/utils/highlight'
 
 const props = withDefaults(defineProps<{
   id: string
@@ -142,23 +144,6 @@ function onUpdateOpen(value: boolean) {
   if (!value) emit('close', { action: 'reviewed', frozeCard: frozeCard.value, revisedCard: revisedCard.value })
 }
 
-// `**...**` highlights in the primary color, `__...__` in the secondary color.
-function highlightParts(text: string) {
-  const parts: { text: string, type?: 'primary' | 'secondary' }[] = []
-  const regex = /\*\*(.+?)\*\*|__(.+?)__/g
-  let lastIndex = 0
-  let match: RegExpExecArray | null
-  while ((match = regex.exec(text))) {
-    if (match.index > lastIndex) parts.push({ text: text.slice(lastIndex, match.index) })
-    parts.push(match[1] !== undefined
-      ? { text: match[1], type: 'primary' }
-      : { text: match[2]!, type: 'secondary' })
-    lastIndex = regex.lastIndex
-  }
-  if (lastIndex < text.length) parts.push({ text: text.slice(lastIndex) })
-  return parts
-}
-
 // Structure templates use fixed codes (wrapped in `**...**`) to denote the
 // word class a pattern attaches to. Each code maps to display segments, so
 // e.g. `verb-stem` can render "V" followed by a struck-through "ます".
@@ -215,7 +200,12 @@ function structureCodeSegments(code: string) {
           @hold-up-end="holdUpActive = false"
         >
           <template #default="{ item }">
-            <UCard class="h-full relative">
+            <CardKanji
+              v-if="contentCollection === 'kanjis'"
+              :kanji="item.rule"
+              :frozen="isFrozen(item.id)"
+            />
+            <UCard v-else class="h-full relative">
               <UIcon
                 v-if="isFrozen(item.id)"
                 name="i-lucide-snowflake"

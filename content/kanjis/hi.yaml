@@ -1,2 +1,31 @@
 id: hi
 title: "日"
+meaning:
+  en: sun, day
+readings:
+  on:
+    - ニチ
+    - ジツ
+  kun:
+    - ひ
+    - -び
+    - -か
+strokeCount: 4
+jlpt: N5
+notes:
+  en: |
+    One of the most common kanji, used both for "sun" (as in 日本, "origin of the sun")
+    and as a generic counter/suffix for days and dates.
+tags:
+  - nature
+  - time
+examples:
+  - word: "**日**本"
+    reading: にほん
+    en: Japan
+  - word: 誕生**日**
+    reading: たんじょう**び**
+    en: birthday
+  - word: 今**日**
+    reading: きょう
+    en: today

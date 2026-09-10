@@ -1,2 +1,29 @@
 id: hito
 title: "人"
+meaning:
+  en: person, people
+readings:
+  on:
+    - ジン
+    - ニン
+  kun:
+    - ひと
+strokeCount: 2
+jlpt: N5
+notes:
+  en: |
+    Pictographic origin (a person seen from the side). Read ジン when it means
+    "a person from/of X" (as a suffix), ニン when counting people, and ひと
+    on its own.
+tags:
+  - people
+examples:
+  - word: 日本**人**
+    reading: にほん**じん**
+    en: Japanese person
+  - word: "**人**気"
+    reading: "**にん**き"
+    en: popularity
+  - word: "**人**"
+    reading: "**ひと**"
+    en: person
