@@ -1,7 +1,15 @@
 id: ni-oite
-title: "において"
-draft: true
+title: "〜において"
 meaning:
-  en: ""
+  en: "at / on / in / during"
 notes:
-  en: ""
+  en: "Indicates the place of an action / event, a state or time. It is equivalent to で but in a formal context."
+structure:
+  - "**noun**において"
+  - "**noun**における**noun**"
+tags: []
+examples:
+  - ja: 入学式は、__3階のホール__**において**行われます。
+  - ja: 日本だけでなく、__ほかの国__**において**も、環境汚染は深刻な問題だ。
+  - ja: 彼のようなすばらしい人に出会えたのは__人生__**における**__最大__の幸運だった。
+  - ja: 今回の風力発電施設の建設は__自然エネルギー開発__**において**大きな意味があると言われている。

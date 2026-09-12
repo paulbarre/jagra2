@@ -1,7 +1,16 @@
 id: ni-oujite
 title: "〜に応じて"
-draft: true
 meaning:
-  en: ""
+  en: "according to / in response to"
 notes:
-  en: ""
+  en: "Indicates that something changes or is done according to a particular condition, situation, or request."
+structure:
+  - "**noun**に応じ"
+  - "**noun**に応じて"
+  - "**noun**に応じた**noun**"
+tags: []
+examples:
+  - ja: 給料は__能力や経験__**に応じ**、決めさせていただきます。
+  - ja: 新年会は__ご予算__**に応じて**いろいろなコースがございます。
+  - ja: 社会人なら、__場所や場合__**に応じた**__服装__を心がけるべきだ。
+  - ja: 会社は__社員の要望__**に応じて**社員食堂のメニューを増やした。

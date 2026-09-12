@@ -1,7 +1,16 @@
 id: irai
-title: "以来"
-draft: true
+title: "〜以来"
 meaning:
-  en: ""
+  en: "since"
 notes:
-  en: ""
+  en: "Indicates that a condition or situation has continued from a certain point onward."
+structure:
+  - "**verb-te**以来"
+  - "**noun**以来"
+tags: []
+examples:
+  - ja: 母が入院して以来、家事はすべて私がしています。
+  - ja: 3年前の夏休みに帰国して以来、長い間家族に会っていません。
+  - ja: こちらに引っ越して以来、散歩を日課にしているんです。
+  - ja: 山野君とは卒業以来、まったく連絡が取れない。
+  - ja: 彼は2000年4月以来、1日も休まず遺伝子の研究を続けている。

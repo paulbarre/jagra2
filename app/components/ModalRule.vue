@@ -152,6 +152,7 @@ const STRUCTURE_CODE_SEGMENTS: Record<string, { text: string, strike?: boolean }
   'a-adj': [{ text: 'ナAな' }],
   'plain': [{ text: 'Pl' }],
   'verb-stem': [{ text: 'V' }, { text: 'ます', strike: true }],
+  'verb-te': [{ text: 'Vて' }],
 }
 
 function structureCodeSegments(code: string) {
