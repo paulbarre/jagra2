@@ -1,11 +1,13 @@
-id: wo-hajime
-title: "をはじめ"
-draft: true
+id: wo-hajime-to-shite
+title: "〜をはじめ（として）"
 meaning:
-  en: ""
+  en: "starting with"
 notes:
-  en: ""
-structure: []
+  en: "Introduces a representative example, usually the most prominent one, followed by other similar people or things."
+structure:
+  - "**noun**をはじめ"
+  - "**noun**をはじめとして"
+  - "**noun**をはじめとする**noun**"
 tags: []
 examples:
   - ja: "日本には富士山をはじめ、たくさんの美しい山がある。"
